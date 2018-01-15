@@ -5,13 +5,13 @@ let fs = require('fs')//eslint-disable-line
 
 let privateSettings = require('../settings/private.settings.json') //eslint-disable-line
 let Logger = require('./Logger.js') //eslint-disable-line
-let NavCoin = require('./NavCoin.js') //eslint-disable-line
+let SoftCoin = require('./SoftCoin.js') //eslint-disable-line
 let EncryptionKeys = require('./EncryptionKeys.js') //eslint-disable-line
 
 const SelectOutgoing = {}
 
 SelectOutgoing.run = (options, callback) => {
-  const required = ['settings', 'navClient']
+  const required = ['settings', 'softClient']
   if (lodash.intersection(Object.keys(options), required).length !== required.length) {
     Logger.writeLog('SEL_001', 'invalid options', { options, required })
     callback(false, { message: 'invalid options provided to SelectOutgoing.run' })
@@ -28,7 +28,7 @@ SelectOutgoing.run = (options, callback) => {
     callback,
     remoteCluster: JSON.parse(JSON.stringify(options.settings.remote)),
     settings: options.settings,
-    navClient: options.navClient,
+    softClient: options.softClient,
   }
 
   SelectOutgoing.pickServer()
@@ -88,7 +88,7 @@ SelectOutgoing.checkOutgoingCanTransact = (body, outgoingAddress) => {
       return
     }
 
-    if (!bodyJson.data || !bodyJson.data.nav_addresses || !bodyJson.data.nav_balance || !bodyJson.data.public_key) {
+    if (!bodyJson.data || !bodyJson.data.soft_addresses || !bodyJson.data.soft_balance || !bodyJson.data.public_key) {
       Logger.writeLog('SEL_006', 'outgoing server returned incorrect params', { body: bodyJson, outgoingAddress })
       SelectOutgoing.runtime.remoteCluster.splice(SelectOutgoing.runtime.chosenOutgoingIndex, 1)
       SelectOutgoing.pickServer()
@@ -96,7 +96,7 @@ SelectOutgoing.checkOutgoingCanTransact = (body, outgoingAddress) => {
     }
 
     SelectOutgoing.runtime.outgoingServerData = bodyJson.data
-    SelectOutgoing.runtime.outgoingNavBalance = bodyJson.data.nav_balance
+    SelectOutgoing.runtime.outgoingSoftBalance = bodyJson.data.soft_balance
 
     if (SelectOutgoing.runtime.outgoingServerData.server_type !== 'OUTGOING') {
       Logger.writeLog('SEL_007', 'outgoing server is of the wrong type', { body: SelectOutgoing.runtime.outgoingServerData })
@@ -128,7 +128,7 @@ SelectOutgoing.checkPublicKey = (dataToEncrypt) => {
       SelectOutgoing.pickServer()
       return
     }
-    SelectOutgoing.hasNavAddresses()
+    SelectOutgoing.hasSoftAddresses()
   } catch (err) {
     Logger.writeLog('SEL_009', 'bad public key provided by outgoing server', {
       error: err,
@@ -139,8 +139,8 @@ SelectOutgoing.checkPublicKey = (dataToEncrypt) => {
   }
 }
 
-SelectOutgoing.hasNavAddresses = () => {
-  if (SelectOutgoing.runtime.outgoingServerData.nav_addresses.length < 1) {
+SelectOutgoing.hasSoftAddresses = () => {
+  if (SelectOutgoing.runtime.outgoingServerData.soft_addresses.length < 1) {
     Logger.writeLog('SEL_010', 'outgoing server did not provide at least 1 address', {
       body: SelectOutgoing.runtime.outgoingServerData,
     })
@@ -148,15 +148,15 @@ SelectOutgoing.hasNavAddresses = () => {
     SelectOutgoing.pickServer()
     return
   }
-  NavCoin.validateAddresses({
-    client: SelectOutgoing.runtime.navClient,
-    addresses: SelectOutgoing.runtime.outgoingServerData.nav_addresses,
-  }, SelectOutgoing.navAddressesValid)
+  SoftCoin.validateAddresses({
+    client: SelectOutgoing.runtime.softClient,
+    addresses: SelectOutgoing.runtime.outgoingServerData.soft_addresses,
+  }, SelectOutgoing.softAddressesValid)
 }
 
-SelectOutgoing.navAddressesValid = (addressesValid) => {
+SelectOutgoing.softAddressesValid = (addressesValid) => {
   if (!addressesValid) {
-    Logger.writeLog('SEL_011', 'invalid nav addresses sent from the outgoing server', { addressesValid })
+    Logger.writeLog('SEL_011', 'invalid soft addresses sent from the outgoing server', { addressesValid })
     SelectOutgoing.runtime.remoteCluster.splice(SelectOutgoing.runtime.chosenOutgoingIndex, 1)
     SelectOutgoing.pickServer()
     return
@@ -172,18 +172,18 @@ SelectOutgoing.encryptOutgoingAddresses = (success, data) => {
   try {
     const crt = ursa.createPublicKey(fs.readFileSync(data.pubKeyFile))
     const encrypted = crt.encrypt(
-      JSON.stringify(SelectOutgoing.runtime.outgoingServerData.nav_addresses), 'utf8', 'base64', ursa.RSA_PKCS1_PADDING
+      JSON.stringify(SelectOutgoing.runtime.outgoingServerData.soft_addresses), 'utf8', 'base64', ursa.RSA_PKCS1_PADDING
     )
     const key = ursa.createPrivateKey(fs.readFileSync(data.privKeyFile))
     const decrypted = key.decrypt(encrypted, 'base64', 'utf8', ursa.RSA_PKCS1_PADDING)
-    if (decrypted !== JSON.stringify(SelectOutgoing.runtime.outgoingServerData.nav_addresses)) {
+    if (decrypted !== JSON.stringify(SelectOutgoing.runtime.outgoingServerData.soft_addresses)) {
       Logger.writeLog('SEL_013', 'failed to encrypt with local key', { success, data, encrypted, decrypted })
       SelectOutgoing.runtime.callback(false, { returnAllToSenders: true })
       return
     }
     SelectOutgoing.runtime.callback(true, {
       chosenOutgoing: SelectOutgoing.runtime.chosenOutgoing,
-      outgoingNavBalance: SelectOutgoing.runtime.outgoingNavBalance,
+      outgoingSoftBalance: SelectOutgoing.runtime.outgoingSoftBalance,
       outgoingPubKey: SelectOutgoing.runtime.outgoingPubKey,
       holdingEncrypted: encrypted,
       returnAllToSenders: false,
@@ -194,7 +194,7 @@ SelectOutgoing.encryptOutgoingAddresses = (success, data) => {
       success,
       data,
       error: err,
-      encrypting: SelectOutgoing.runtime.outgoingServerData.nav_addresses,
+      encrypting: SelectOutgoing.runtime.outgoingServerData.soft_addresses,
     })
     SelectOutgoing.runtime.callback(false, { returnAllToSenders: true })
   }

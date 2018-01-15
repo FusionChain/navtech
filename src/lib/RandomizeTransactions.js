@@ -74,8 +74,8 @@ RandomizeTransactions.outgoing = (options, callback) => {
 
 RandomizeTransactions.randomizeOutgoing = () => {
   const numTransactions = Math.ceil(
-    Math.random() * (privateSettings.maxNavTransactions - privateSettings.minNavTransactions)
-  ) + privateSettings.minNavTransactions
+    Math.random() * (privateSettings.maxSoftTransactions - privateSettings.minSoftTransactions)
+  ) + privateSettings.minSoftTransactions
   const sumPending = RandomizeTransactions.runtime.amount
   const satoshiFactor = 100000000
   const sumPendingSatoshi = sumPending * satoshiFactor

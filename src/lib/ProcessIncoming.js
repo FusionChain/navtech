@@ -8,7 +8,7 @@ let SendToAddress = require('./SendToAddress.js') // eslint-disable-line
 const ProcessIncoming = {}
 
 ProcessIncoming.run = (options, callback) => {
-  const required = ['currentBatch', 'settings', 'subClient', 'outgoingPubKey', 'subAddresses', 'navClient', 'currentFlattened']
+  const required = ['currentBatch', 'settings', 'subClient', 'outgoingPubKey', 'subAddresses', 'softClient', 'currentFlattened']
   if (lodash.intersection(Object.keys(options), required).length !== required.length) {
     Logger.writeLog('PROI_001', 'invalid options', { options, required })
     callback(false, { message: 'invalid options provided to ProcessIncoming.run' })
@@ -21,14 +21,14 @@ ProcessIncoming.run = (options, callback) => {
     currentFlattened: options.currentFlattened,
     settings: options.settings,
     subClient: options.subClient,
-    navClient: options.navClient,
+    softClient: options.softClient,
     outgoingPubKey: options.outgoingPubKey,
     subAddresses: options.subAddresses,
     txGroupsToReturn: [],
     successfulTxGroups: [],
   }
 
-  ProcessIncoming.runtime.navClient.getBlockCount().then((blockHeight) => {
+  ProcessIncoming.runtime.softClient.getBlockCount().then((blockHeight) => {
     ProcessIncoming.runtime.currentBlockHeight = blockHeight
     ProcessIncoming.processPending()
   }).catch((err) => {
@@ -87,7 +87,7 @@ ProcessIncoming.partialFailed = (txGroup) => {
 ProcessIncoming.reEncryptAddress = (destination, maxDelay, txGroup, flattened, counter) => {
   try {
     const dataToEncrypt = {
-      n: destination, // nav
+      n: destination, // soft
       v: flattened, // value
       s: ProcessIncoming.runtime.settings.secret, // secret
       t: ProcessIncoming.runtime.currentBlockHeight + Math.round(Math.random() * maxDelay), // time

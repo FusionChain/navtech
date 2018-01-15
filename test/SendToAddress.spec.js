@@ -47,11 +47,11 @@ describe('[SendToAddress]', () => {
     })
     it('should have the right params and fail to send due to locked wallet', (done) => {
       const callback = () => {}
-      const NavCoin = {
+      const SoftCoin = {
         unlockWallet: (options, parsedCallback) => {
           expect(parsedCallback).toBe(SendToAddress.walletUnlocked)
           expect(options.client).toBe(client)
-          expect(options.type).toBe('navCoin')
+          expect(options.type).toBe('softCoin')
           sinon.assert.notCalled(mockLogger.writeLog)
           done()
         },
@@ -66,7 +66,7 @@ describe('[SendToAddress]', () => {
       const mockLogger = {
         writeLog: sinon.spy(),
       }
-      SendToAddress.__set__('NavCoin', NavCoin)
+      SendToAddress.__set__('SoftCoin', SoftCoin)
       SendToAddress.__set__('Logger', mockLogger)
       SendToAddress.send({ address, amount, client, transaction, counter: 1 }, callback)
     })

@@ -31,12 +31,12 @@
       "pass": "SMTP_EMAIL_PASSWORD",
       "server": "smtp.gmail.com"
     },
-    "navCoin": {
+    "softCoin": {
       "user": "RPC_USERNAME",
       "pass": "RPC_PASSWORD",
       "ip": "127.0.0.1",
       "port": "44444",
-      "walletPassphrase": "NAVCOIN_WALLET_PASSPHRASE"
+      "walletPassphrase": "SOFTCOIN_WALLET_PASSPHRASE"
     },
     "subChain": {
       "user": "RPC_USERNAME",

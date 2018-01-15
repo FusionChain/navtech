@@ -50,9 +50,9 @@ Logger.writeLog = (errorCode, errorMessage, data, email) => {
 
 Logger.sendMail = (errorCode, errorMessage, data) => {
   const mailOptions = {
-    from: '"Navtech System" <' + settings.smtp.user + '>',
+    from: '"Softnode System" <' + settings.smtp.user + '>',
     to: settings.notificationEmail,
-    subject: 'Navtech System Message - ' + settings.local.ipAddress + ' (' + globalSettings.serverType + ') ' + errorCode,
+    subject: 'Softnode System Message - ' + settings.local.ipAddress + ' (' + globalSettings.serverType + ') ' + errorCode,
     text: errorCode + ' - ' + errorMessage,
     attachments: [
       {

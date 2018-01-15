@@ -20,7 +20,7 @@ if (globalSettings.serverType === 'OUTGOING') settings = config.get('OUTGOING')
 
 // -------------- INIT SETTINGS AND DAEMONS ------------------------------------
 
-let navClient
+let softClient
 let subClient
 
 if (settings) {
@@ -38,11 +38,11 @@ function canInit(settingsValid) {
 }
 
 function initServer() {
-  navClient = new Client({
-    username: settings.navCoin.user,
-    password: settings.navCoin.pass,
-    port: settings.navCoin.port,
-    host: settings.navCoin.host,
+  softClient = new Client({
+    username: settings.softCoin.user,
+    password: settings.softCoin.pass,
+    port: settings.softCoin.port,
+    host: settings.softCoin.host,
   })
 
   subClient = new Client({
@@ -55,14 +55,14 @@ function initServer() {
     createKeyPair()
     return
   }
-  unlockNavWallet()
+  unlockSoftWallet()
 }
 
 // -------------- MAIN FUNCTIONS -----------------------------------------------
 
-function unlockNavWallet() {
-  navClient.walletPassphrase(settings.navCoin.walletPassphrase, 600).then(() => {
-    console.log('STATUS: nav wallet unlock successful')
+function unlockSoftWallet() {
+  softClient.walletPassphrase(settings.softCoin.walletPassphrase, 600).then(() => {
+    console.log('STATUS: soft wallet unlock successful')
     unlockSubWallet()
   }).catch((err) => {
     switch (err.code) {
@@ -70,24 +70,24 @@ function unlockNavWallet() {
         encryptWallet()
         break
       case -17:
-        navClient.walletLock().then(() => {
-          unlockNavWallet()
+        softClient.walletLock().then(() => {
+          unlockSoftWallet()
         }).catch(() => {
-          console.log('ERROR: failed navClient.walletPassphrase', err)
+          console.log('ERROR: failed softClient.walletPassphrase', err)
         })
         break
       default:
-        console.log('ERROR: failed navClient.walletPassphrase', err)
+        console.log('ERROR: failed softClient.walletPassphrase', err)
     }
   })
 }
 
 const encryptWallet = () => {
-  navClient.encryptWallet(settings.navCoin.walletPassphrase).then(() => {
-    console.log('STATUS: nav wallet encrypted with passphrase "' + settings.navCoin.walletPassphrase + '"')
-    console.log('SUCCESS: please restart navcoind and re-run this script')
+  softClient.encryptWallet(settings.softCoin.walletPassphrase).then(() => {
+    console.log('STATUS: soft wallet encrypted with passphrase "' + settings.softCoin.walletPassphrase + '"')
+    console.log('SUCCESS: please restart softcoind and re-run this script')
   }).catch((err) => {
-    console.log('ERROR: failed navClient.encryptWallet', err)
+    console.log('ERROR: failed softClient.encryptWallet', err)
   })
 }
 
@@ -174,7 +174,7 @@ const testKeyPair = (privKeyFile, pubKeyFile) => {
     const decrypted = key.decrypt(encrypted, 'base64', 'utf8', ursa.RSA_PKCS1_PADDING)
     if (decrypted === JSON.stringify(dataToEncrypt)) {
       console.log('STATUS: encryption test passed', JSON.stringify(dataToEncrypt))
-      generateNavAddresses()
+      generateSoftAddresses()
     } else {
       console.log('ERROR: failed to decrypt', dataToEncrypt, encrypted, decrypted)
     }
@@ -185,18 +185,18 @@ const testKeyPair = (privKeyFile, pubKeyFile) => {
 
 // -------------- GENERATE ADDRESS BANKS ---------------------------------------
 
-const generateNavAddresses = () => {
+const generateSoftAddresses = () => {
   AddressGenerator.generate({
     accountName: privateSettings.account[globalSettings.serverType],
-    client: navClient,
+    client: softClient,
     maxAddresses: privateSettings.maxAddresses,
   }, generateSubAddresses)
 }
 
-const generateSubAddresses = (navSuccess) => {
-  if (!navSuccess) {
-    console.log('ERROR: failed to generate nav addresses')
-    Logger.writeLog('002', 'failed to generate nav addresses')
+const generateSubAddresses = (softSuccess) => {
+  if (!softSuccess) {
+    console.log('ERROR: failed to generate soft addresses')
+    Logger.writeLog('002', 'failed to generate soft addresses')
     return
   }
   AddressGenerator.generate({
@@ -215,7 +215,7 @@ const generateHoldingAddresses = (subSuccess) => {
   if (globalSettings.serverType === 'INCOMING') {
     AddressGenerator.generate({
       accountName: privateSettings.account.HOLDING,
-      client: navClient,
+      client: softClient,
       maxAddresses: privateSettings.maxHolding,
     }, createSecret)
   } else {
@@ -229,8 +229,8 @@ const generateHoldingAddresses = (subSuccess) => {
 
 const createSecret = (holdingSuccess) => {
   if (!holdingSuccess) {
-    console.log('ERROR: failed to generate holding nav addresses')
-    Logger.writeLog('002', 'failed to generate holding nav addresses')
+    console.log('ERROR: failed to generate holding soft addresses')
+    Logger.writeLog('002', 'failed to generate holding soft addresses')
     return
   }
 

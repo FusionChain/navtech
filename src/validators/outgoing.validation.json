@@ -38,7 +38,7 @@
     "type": "INT",
     "min": 10
   },
-  "navPoolAmount": {
+  "softPoolAmount": {
     "required": true,
     "type": "INT",
     "min": 50000
@@ -50,7 +50,7 @@
   },
   "anonTxFeeAddress": {
     "required": true,
-    "type": "NAV_ADDRESS"
+    "type": "SOFT_ADDRESS"
   },
   "notificationEmail": {
     "required": true,
@@ -70,7 +70,7 @@
       "type": "DOMAIN"
     }
   },
-  "navCoin": {
+  "softCoin": {
     "user": {
       "required": true,
       "type": "STRING"

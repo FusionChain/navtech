@@ -19,7 +19,7 @@ describe('[IncomingServer]', () => {
           expect(callback).toBe(IncomingServer.startProcessing)
           sinon.assert.calledOnce(mockLogger.writeLog)
           sinon.assert.calledWith(mockLogger.writeLog, 'INC_000')
-          expect(IncomingServer.navClient).toBeA('object')
+          expect(IncomingServer.softClient).toBeA('object')
           expect(IncomingServer.subClient).toBeA('object')
           done()
         },
@@ -39,7 +39,7 @@ describe('[IncomingServer]', () => {
       IncomingServer.init()
       sinon.assert.calledOnce(mockLogger.writeLog)
       sinon.assert.calledWith(mockLogger.writeLog, 'INC_000')
-      expect(IncomingServer.navClient).toBeA('object')
+      expect(IncomingServer.softClient).toBeA('object')
       expect(IncomingServer.subClient).toBeA('object')
       expect(IncomingServer.cron._repeat).toBe(settings.scriptInterval)
       done()
@@ -59,13 +59,13 @@ describe('[IncomingServer]', () => {
       done()
     })
     it('should proceed to run preflight checks', (done) => {
-      IncomingServer.navClient = { getInfo: () => true }
+      IncomingServer.softClient = { getInfo: () => true }
       IncomingServer.subClient = { getInfo: () => true }
       const now = new Date()
       const clock = sinon.useFakeTimers(now.getTime())
       const PreFlight = {
         run: (options, callback) => {
-          expect(options.navClient).toBe(IncomingServer.navClient)
+          expect(options.softClient).toBe(IncomingServer.softClient)
           expect(options.subClient).toBe(IncomingServer.subClient)
           expect(callback).toBe(IncomingServer.preFlightComplete)
           expect(IncomingServer.processing).toBe(true)
@@ -99,15 +99,15 @@ describe('[IncomingServer]', () => {
       done()
     })
     it('should pass preflight, set balances and call the refill function', (done) => {
-      IncomingServer.navClient = { getInfo: () => true }
+      IncomingServer.softClient = { getInfo: () => true }
       IncomingServer.subClient = { getInfo: () => true }
       const RefillOutgoing = {
         run: (options, callback) => {
-          expect(options.navClient).toBe(IncomingServer.navClient)
+          expect(options.softClient).toBe(IncomingServer.softClient)
           expect(callback).toBe(IncomingServer.holdingProcessed)
           expect(IncomingServer.processing).toBe(true)
           expect(IncomingServer.runtime).toEqual({
-            navBalance: 1000,
+            softBalance: 1000,
             subBalance: 100,
           })
           done()
@@ -118,7 +118,7 @@ describe('[IncomingServer]', () => {
       IncomingServer.__set__('Logger', mockLogger)
       IncomingServer.__set__('RefillOutgoing', RefillOutgoing)
       IncomingServer.preFlightComplete(true, {
-        navBalance: 1000,
+        softBalance: 1000,
         subBalance: 100,
       })
     })
@@ -140,11 +140,11 @@ describe('[IncomingServer]', () => {
       done()
     })
     it('should process the holding, set balances and call the refill function', (done) => {
-      IncomingServer.navClient = { getInfo: () => true }
+      IncomingServer.softClient = { getInfo: () => true }
       IncomingServer.subClient = { getInfo: () => true }
       const SelectOutgoing = {
         run: (options, callback) => {
-          expect(options.navClient).toBe(IncomingServer.navClient)
+          expect(options.softClient).toBe(IncomingServer.softClient)
           expect(options.settings).toBe(settings)
           expect(callback).toBe(IncomingServer.outgoingSelected)
           expect(IncomingServer.processing).toBe(true)
@@ -156,7 +156,7 @@ describe('[IncomingServer]', () => {
       IncomingServer.__set__('Logger', mockLogger)
       IncomingServer.__set__('SelectOutgoing', SelectOutgoing)
       IncomingServer.holdingProcessed(true, {
-        navClient: IncomingServer.navClient,
+        softClient: IncomingServer.softClient,
         settings,
       })
     })
@@ -178,11 +178,11 @@ describe('[IncomingServer]', () => {
       done()
     })
     it('should return all to senders if failed to locate outgoing server', (done) => {
-      IncomingServer.navClient = { getInfo: () => true }
+      IncomingServer.softClient = { getInfo: () => true }
       IncomingServer.subClient = { getInfo: () => true }
       const ReturnAllToSenders = {
         run: (options, callback) => {
-          expect(options.navClient).toBe(IncomingServer.navClient)
+          expect(options.softClient).toBe(IncomingServer.softClient)
           expect(callback).toBe(IncomingServer.allPendingReturned)
           expect(IncomingServer.processing).toBe(true)
           done()
@@ -198,11 +198,11 @@ describe('[IncomingServer]', () => {
       })
     })
     it('should pause transactions if the issue was on the incoming server', (done) => {
-      IncomingServer.navClient = { getInfo: () => true }
+      IncomingServer.softClient = { getInfo: () => true }
       IncomingServer.subClient = { getInfo: () => true }
       const ReturnAllToSenders = {
         run: (options, callback) => {
-          expect(options.navClient).toBe(IncomingServer.navClient)
+          expect(options.softClient).toBe(IncomingServer.softClient)
           expect(callback).toBe(IncomingServer.allPendingReturned)
           expect(IncomingServer.processing).toBe(true)
           expect(IncomingServer.paused).toBe(true)
@@ -220,11 +220,11 @@ describe('[IncomingServer]', () => {
       })
     })
     it('should not pause transactions if the issue was on the outgoing server', (done) => {
-      IncomingServer.navClient = { getInfo: () => true }
+      IncomingServer.softClient = { getInfo: () => true }
       IncomingServer.subClient = { getInfo: () => true }
       const ReturnAllToSenders = {
         run: (options, callback) => {
-          expect(options.navClient).toBe(IncomingServer.navClient)
+          expect(options.softClient).toBe(IncomingServer.softClient)
           expect(callback).toBe(IncomingServer.allPendingReturned)
           expect(IncomingServer.processing).toBe(true)
           expect(IncomingServer.paused).toBe(false)
@@ -241,19 +241,19 @@ describe('[IncomingServer]', () => {
       })
     })
     it('should run prepareIncoming if all params correct', (done) => {
-      IncomingServer.navClient = { getInfo: () => true }
+      IncomingServer.softClient = { getInfo: () => true }
       IncomingServer.subClient = { getInfo: () => true }
       const PrepareIncoming = {
         run: (options, callback) => {
-          expect(options.navClient).toBe(IncomingServer.navClient)
-          expect(options.outgoingNavBalance).toBe(1000)
-          expect(options.navClient).toBe(IncomingServer.navClient)
+          expect(options.softClient).toBe(IncomingServer.softClient)
+          expect(options.outgoingSoftBalance).toBe(1000)
+          expect(options.softClient).toBe(IncomingServer.softClient)
           expect(callback).toBe(IncomingServer.currentBatchPrepared)
           expect(options.settings).toBe(settings)
           expect(IncomingServer.processing).toBe(true)
           expect(IncomingServer.runtime).toEqual({
             chosenOutgoing: 'QWER',
-            outgoingNavBalance: 1000,
+            outgoingSoftBalance: 1000,
             holdingEncrypted: 'ZXCV',
             outgoingPubKey: 'ASDF',
           })
@@ -268,7 +268,7 @@ describe('[IncomingServer]', () => {
       IncomingServer.outgoingSelected(true, {
         returnAllToSenders: false,
         chosenOutgoing: 'QWER',
-        outgoingNavBalance: 1000,
+        outgoingSoftBalance: 1000,
         holdingEncrypted: 'ZXCV',
         outgoingPubKey: 'ASDF',
       })
@@ -340,11 +340,11 @@ describe('[IncomingServer]', () => {
       done()
     })
     it('should get the currentBatch but have some to return', (done) => {
-      IncomingServer.navClient = { getInfo: () => true }
+      IncomingServer.softClient = { getInfo: () => true }
       const ReturnAllToSenders = {
         fromList: (options, callback) => {
           expect(callback).toBe(IncomingServer.pendingFailedReturned)
-          expect(options.navClient).toBe(IncomingServer.navClient)
+          expect(options.softClient).toBe(IncomingServer.softClient)
           expect(options.transactionsToReturn).toEqual([{ txid: '1234', amount: 100 }, { txid: 'QWER', amount: 100 }])
           done()
         },
@@ -425,7 +425,7 @@ describe('[IncomingServer]', () => {
 
       const ReturnAllToSenders = {
         run: (options, callback) => {
-          expect(options.navClient).toBe(IncomingServer.navClient)
+          expect(options.softClient).toBe(IncomingServer.softClient)
           expect(callback).toBe(IncomingServer.allPendingReturned)
           sinon.assert.calledOnce(mockLogger.writeLog)
           sinon.assert.calledWith(mockLogger.writeLog, 'INC_011A')
@@ -506,7 +506,7 @@ describe('[IncomingServer]', () => {
 
       const ReturnAllToSenders = {
         run: (options, callback) => {
-          expect(options.navClient).toBe(IncomingServer.navClient)
+          expect(options.softClient).toBe(IncomingServer.softClient)
           expect(callback).toBe(IncomingServer.allPendingReturned)
           sinon.assert.calledOnce(mockLogger.writeLog)
           sinon.assert.calledWith(mockLogger.writeLog, 'INC_009')
@@ -522,13 +522,13 @@ describe('[IncomingServer]', () => {
       IncomingServer.retrievedSubchainAddresses(false)
     })
     it('should fail to retrieve subchain addresses with bad params', (done) => {
-      IncomingServer.navClient = { getInfo: () => true }
+      IncomingServer.softClient = { getInfo: () => true }
       IncomingServer.processing = true
       IncomingServer.paused = false
 
       const ReturnAllToSenders = {
         run: (options, callback) => {
-          expect(options.navClient).toBe(IncomingServer.navClient)
+          expect(options.softClient).toBe(IncomingServer.softClient)
           expect(callback).toBe(IncomingServer.allPendingReturned)
           sinon.assert.calledOnce(mockLogger.writeLog)
           sinon.assert.calledWith(mockLogger.writeLog, 'INC_009')
@@ -547,7 +547,7 @@ describe('[IncomingServer]', () => {
       IncomingServer.processing = true
       IncomingServer.paused = false
       IncomingServer.subClient = { getInfo: () => true }
-      IncomingServer.navClient = { getInfo: () => true }
+      IncomingServer.softClient = { getInfo: () => true }
       IncomingServer.runtime = {
         currentBatch: [{ unique: 'ABC', amount: 30 }, { unique: 'XYZ', amount: 200 }],
         currentFlattened: { ABC: [10, 10, 10], XYZ: [100, 100] },
@@ -555,7 +555,7 @@ describe('[IncomingServer]', () => {
       }
       const ProcessIncoming = {
         run: (options, callback) => {
-          expect(options.navClient).toBe(IncomingServer.navClient)
+          expect(options.softClient).toBe(IncomingServer.softClient)
           expect(options.subClient).toBe(IncomingServer.subClient)
           expect(options.currentBatch).toEqual(IncomingServer.runtime.currentBatch)
           expect(options.currentFlattened).toEqual(IncomingServer.runtime.currentFlattened)
@@ -583,11 +583,11 @@ describe('[IncomingServer]', () => {
     it('should fail to process all transactions and return all to senders', (done) => {
       IncomingServer.processing = true
       IncomingServer.paused = false
-      IncomingServer.navClient = { getInfo: () => true }
+      IncomingServer.softClient = { getInfo: () => true }
 
       const ReturnAllToSenders = {
         run: (options, callback) => {
-          expect(options.navClient).toBe(IncomingServer.navClient)
+          expect(options.softClient).toBe(IncomingServer.softClient)
           expect(callback).toBe(IncomingServer.allPendingReturned)
           sinon.assert.calledOnce(mockLogger.writeLog)
           sinon.assert.calledWith(mockLogger.writeLog, 'INC_010')
@@ -605,7 +605,7 @@ describe('[IncomingServer]', () => {
     it('should process some and fail a partial send', (done) => {
       IncomingServer.processing = true
       IncomingServer.paused = false
-      IncomingServer.navClient = { getInfo: () => true }
+      IncomingServer.softClient = { getInfo: () => true }
 
       const mockLogger = { writeLog: sinon.spy() }
       IncomingServer.__set__('Logger', mockLogger)
@@ -621,11 +621,11 @@ describe('[IncomingServer]', () => {
     it('should succeed with some failed and return the failed', (done) => {
       IncomingServer.processing = true
       IncomingServer.paused = false
-      IncomingServer.navClient = { getInfo: () => true }
+      IncomingServer.softClient = { getInfo: () => true }
 
       const ReturnAllToSenders = {
         fromList: (options, callback) => {
-          expect(options.navClient).toBe(IncomingServer.navClient)
+          expect(options.softClient).toBe(IncomingServer.softClient)
           expect(callback).toBe(IncomingServer.failedTransactionsReturned)
           sinon.assert.calledOnce(mockLogger.writeLog)
           sinon.assert.calledWith(mockLogger.writeLog, 'INC_011')
@@ -673,7 +673,7 @@ describe('[IncomingServer]', () => {
     it('should succeed with no failed and skip trying to return any', (done) => {
       IncomingServer.processing = true
       IncomingServer.paused = false
-      IncomingServer.navClient = { getInfo: () => true }
+      IncomingServer.softClient = { getInfo: () => true }
 
       IncomingServer.failedTransactionsReturned = (success) => {
         expect(success).toBe(true)
@@ -713,7 +713,7 @@ describe('[IncomingServer]', () => {
     it('should fail to return the failed to sender and continue to try to spend to holding', (done) => {
       IncomingServer.processing = true
       IncomingServer.paused = false
-      IncomingServer.navClient = { getInfo: () => true }
+      IncomingServer.softClient = { getInfo: () => true }
 
       const successfulTxGroups = [
         {
@@ -732,7 +732,7 @@ describe('[IncomingServer]', () => {
 
       const SpendToHolding = {
         run: (options, callback) => {
-          expect(options.navClient).toBe(IncomingServer.navClient)
+          expect(options.softClient).toBe(IncomingServer.softClient)
           expect(callback).toBe(IncomingServer.spentToHolding)
           expect(options.holdingEncrypted).toBe('QWER==')
           expect(options.successfulSubTransactions).toEqual([
@@ -761,7 +761,7 @@ describe('[IncomingServer]', () => {
     it('should return the failed to sender and continue to spend to holding', (done) => {
       IncomingServer.processing = true
       IncomingServer.paused = false
-      IncomingServer.navClient = { getInfo: () => true }
+      IncomingServer.softClient = { getInfo: () => true }
 
       const successfulTxGroups = [
         {
@@ -780,7 +780,7 @@ describe('[IncomingServer]', () => {
 
       const SpendToHolding = {
         run: (options, callback) => {
-          expect(options.navClient).toBe(IncomingServer.navClient)
+          expect(options.softClient).toBe(IncomingServer.softClient)
           expect(callback).toBe(IncomingServer.spentToHolding)
           expect(options.holdingEncrypted).toBe('QWER==')
           expect(options.successfulSubTransactions).toEqual([

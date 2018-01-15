@@ -7,7 +7,7 @@ let SendToAddress = require('./SendToAddress.js') // eslint-disable-line
 const ProcessOutgoing = {}
 
 ProcessOutgoing.run = (options, callback) => {
-  const required = ['currentBatch', 'settings', 'navClient']
+  const required = ['currentBatch', 'settings', 'softClient']
   if (lodash.intersection(Object.keys(options), required).length !== required.length) {
     Logger.writeLog('PROO_001', 'invalid options', { options, required })
     callback(false, { message: 'invalid options provided to ProcessOutgoing.run' })
@@ -17,7 +17,7 @@ ProcessOutgoing.run = (options, callback) => {
     callback,
     currentBatch: options.currentBatch,
     settings: options.settings,
-    navClient: options.navClient,
+    softClient: options.softClient,
     successfulTransactions: [],
     failedTransactions: [],
   }
@@ -37,11 +37,11 @@ ProcessOutgoing.processPending = () => {
   // ProcessOutgoing.mockSend()
 
   SendToAddress.send({
-    client: ProcessOutgoing.runtime.navClient,
+    client: ProcessOutgoing.runtime.softClient,
     address: ProcessOutgoing.runtime.remainingTransactions[0].decrypted.n,
     amount: ProcessOutgoing.runtime.remainingTransactions[0].decrypted.v,
     transaction: ProcessOutgoing.runtime.remainingTransactions[0],
-  }, ProcessOutgoing.sentNav)
+  }, ProcessOutgoing.sentSoft)
 }
 
 ProcessOutgoing.transactionFailed = () => {
@@ -51,7 +51,7 @@ ProcessOutgoing.transactionFailed = () => {
 }
 
 ProcessOutgoing.mockSend = () => {
-  Logger.writeLog('PROO_003A', 'mock nav sent', { transaction: ProcessOutgoing.runtime.remainingTransactions[0] })
+  Logger.writeLog('PROO_003A', 'mock soft sent', { transaction: ProcessOutgoing.runtime.remainingTransactions[0] })
   ProcessOutgoing.runtime.successfulTransactions.push({
     transaction: ProcessOutgoing.runtime.remainingTransactions[0].transaction,
   })
@@ -59,9 +59,9 @@ ProcessOutgoing.mockSend = () => {
   ProcessOutgoing.processPending()
 }
 
-ProcessOutgoing.sentNav = (success, data) => {
+ProcessOutgoing.sentSoft = (success, data) => {
   if (!success || !data || !data.sendOutcome) {
-    Logger.writeLog('PROO_004', 'failed nav send to address', data, true)
+    Logger.writeLog('PROO_004', 'failed soft send to address', data, true)
     ProcessOutgoing.runtime.failedTransactions.push(ProcessOutgoing.runtime.remainingTransactions[0])
   } else {
     ProcessOutgoing.runtime.successfulTransactions.push(ProcessOutgoing.runtime.remainingTransactions[0])

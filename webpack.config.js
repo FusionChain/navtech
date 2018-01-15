@@ -19,7 +19,7 @@ const vendorModules = [
 
 module.exports = {
   entry: {
-    navtech: './src/app.js',
+    softnode: './src/app.js',
     vendor: vendorModules,
   },
   target: 'node',

@@ -8,7 +8,7 @@ let PreFlight = require('./lib/PreFlight.js') //eslint-disable-line
 let PrepareOutgoing = require('./lib/PrepareOutgoing.js') //eslint-disable-line
 let ProcessOutgoing = require('./lib/ProcessOutgoing.js') //eslint-disable-line
 let PayoutFee = require('./lib/PayoutFee') //eslint-disable-line
-let ReturnSubnav = require('./lib/ReturnSubnav') //eslint-disable-line
+let ReturnSubsoft = require('./lib/ReturnSubsoft') //eslint-disable-line
 
 const config = require('config')
 
@@ -25,11 +25,11 @@ const OutgoingServer = {
 // --------- Client Initialisation ---------------------------------------------
 
 OutgoingServer.init = () => {
-  OutgoingServer.navClient = new Client({
-    username: settings.navCoin.user,
-    password: settings.navCoin.pass,
-    port: settings.navCoin.port,
-    host: settings.navCoin.host,
+  OutgoingServer.softClient = new Client({
+    username: settings.softCoin.user,
+    password: settings.softCoin.pass,
+    port: settings.softCoin.port,
+    host: settings.softCoin.host,
   })
 
   OutgoingServer.subClient = new Client({
@@ -59,7 +59,7 @@ OutgoingServer.startProcessing = () => {
   OutgoingServer.runtime = {}
   OutgoingServer.runtime.cycleStart = new Date()
   PreFlight.run({
-    navClient: OutgoingServer.navClient,
+    softClient: OutgoingServer.softClient,
     subClient: OutgoingServer.subClient,
     settings,
   }, OutgoingServer.preFlightComplete)
@@ -71,28 +71,28 @@ OutgoingServer.preFlightComplete = (success, data) => {
     OutgoingServer.processing = false
     return
   }
-  OutgoingServer.runtime.navBalance = data.navBalance
+  OutgoingServer.runtime.softBalance = data.softBalance
   OutgoingServer.runtime.subBalance = data.subBalance
   PayoutFee.run({
-    navClient: OutgoingServer.navClient,
+    softClient: OutgoingServer.softClient,
     settings,
   }, OutgoingServer.feePaid)
 }
 
 OutgoingServer.feePaid = (success, data) => {
   if (!success) {
-    Logger.writeLog('OUT_006', 'failed nav send to txfee address', { data, success })
+    Logger.writeLog('OUT_006', 'failed soft send to txfee address', { data, success })
   }
-  OutgoingServer.navClient.getBalance().then((navBalance) => {
-    OutgoingServer.runtime.navBalance = navBalance
+  OutgoingServer.softClient.getBalance().then((softBalance) => {
+    OutgoingServer.runtime.softBalance = softBalance
     PrepareOutgoing.run({
-      navClient: OutgoingServer.navClient,
+      softClient: OutgoingServer.softClient,
       subClient: OutgoingServer.subClient,
-      navBalance,
+      softBalance,
       settings,
     }, OutgoingServer.currentBatchPrepared)
   }).catch((err) => {
-    Logger.writeLog('OUT_006A', 'failed nav send to getbalance after sending tx-fee', { data, err })
+    Logger.writeLog('OUT_006A', 'failed soft send to getbalance after sending tx-fee', { data, err })
     OutgoingServer.processing = false
     return
   })
@@ -112,7 +112,7 @@ OutgoingServer.currentBatchPrepared = (success, data) => {
 
   ProcessOutgoing.run({
     currentBatch: OutgoingServer.runtime.currentBatch,
-    navClient: OutgoingServer.navClient,
+    softClient: OutgoingServer.softClient,
     settings,
   }, OutgoingServer.transactionsProcessed)
 }
@@ -138,16 +138,16 @@ OutgoingServer.transactionsProcessed = (success, data) => {
 
   OutgoingServer.runtime.successfulTransactions = data.successfulTransactions
 
-  ReturnSubnav.run({
+  ReturnSubsoft.run({
     transactions: OutgoingServer.runtime.successfulTransactions,
     subClient: OutgoingServer.subClient,
     settings,
-  }, OutgoingServer.subnavReturned)
+  }, OutgoingServer.subsoftReturned)
 }
 
-OutgoingServer.subnavReturned = (success, data) => {
+OutgoingServer.subsoftReturned = (success, data) => {
   if (!success) {
-    Logger.writeLog('OUT_007', 'unable to return subnav to incoming server', {
+    Logger.writeLog('OUT_007', 'unable to return subsoft to incoming server', {
       transactions: OutgoingServer.runtime.successfulTransactions,
       data,
     }, true)

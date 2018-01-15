@@ -4,7 +4,7 @@ const config = require('config')
 const lodash = require('lodash')
 
 let Logger = require('./Logger.js') //eslint-disable-line
-let NavCoin = require('./NavCoin.js') //eslint-disable-line
+let SoftCoin = require('./SoftCoin.js') //eslint-disable-line
 
 let globalSettings = config.get('GLOBAL') //eslint-disable-line
 
@@ -49,8 +49,8 @@ SendToAddress.send = (options, callback) => {
     if (err.code === -13 && !options.triedToUnlock) {
       SendToAddress.runtime.options = options
       SendToAddress.runtime.callback = callback
-      const type = (options.client.port === settings.navCoin.port) ? 'navCoin' : 'subChain'
-      NavCoin.unlockWallet({ settings, client: options.client, type }, SendToAddress.walletUnlocked)
+      const type = (options.client.port === settings.softCoin.port) ? 'softCoin' : 'subChain'
+      SoftCoin.unlockWallet({ settings, client: options.client, type }, SendToAddress.walletUnlocked)
       return
     }
     // @NOTE not able to test because timeout is longer than the tests will allow

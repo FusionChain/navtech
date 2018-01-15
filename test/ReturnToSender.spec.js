@@ -6,7 +6,7 @@ const sinon = require('sinon')
 
 let ReturnToSender = rewire('../src/lib/ReturnToSender')
 
-describe('[ReturnSubnav]', () => {
+describe('[ReturnSubsoft]', () => {
   describe('(send)', () => {
     it('should fail on params', (done) => {
       const callback = (success, data) => {

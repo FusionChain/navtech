@@ -102,8 +102,8 @@ function eachField(value, ignoreList, validation, currentKey) {
     case 'EMAIL':
       validateEmail(value, validation, currentKey)
       break
-    case 'NAV_ADDRESS':
-      validateNavAddress(value, validation, currentKey)
+    case 'SOFT_ADDRESS':
+      validateSoftAddress(value, validation, currentKey)
       break
     case 'STRING':
       validateString(value, validation, currentKey)
@@ -182,9 +182,9 @@ function validateEmail(value, validation, key) {
   return true
 }
 
-function validateNavAddress(value, validation, key) {
+function validateSoftAddress(value, validation, key) {
   if (value.length !== 34 && value.charAt(0) !== 'N') {
-    SettingsValidator.errors.push('INVALID_NAV_ADDRESSS for ' + key + ', must be 34 characters and starting with N')
+    SettingsValidator.errors.push('INVALID_SOFT_ADDRESSS for ' + key + ', must be 34 characters and starting with N')
     return false
   }
   return true

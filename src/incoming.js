@@ -26,11 +26,11 @@ const IncomingServer = {
 }
 
 IncomingServer.init = () => {
-  IncomingServer.navClient = new Client({
-    username: settings.navCoin.user,
-    password: settings.navCoin.pass,
-    port: settings.navCoin.port,
-    host: settings.navCoin.host,
+  IncomingServer.softClient = new Client({
+    username: settings.softCoin.user,
+    password: settings.softCoin.pass,
+    port: settings.softCoin.port,
+    host: settings.softCoin.host,
   })
 
   IncomingServer.subClient = new Client({
@@ -61,7 +61,7 @@ IncomingServer.startProcessing = () => {
   IncomingServer.runtime = {}
   IncomingServer.runtime.cycleStart = new Date()
   PreFlight.run({
-    navClient: IncomingServer.navClient,
+    softClient: IncomingServer.softClient,
     subClient: IncomingServer.subClient,
     settings,
   }, IncomingServer.preFlightComplete)
@@ -73,9 +73,9 @@ IncomingServer.preFlightComplete = (success, data) => {
     IncomingServer.processing = false
     return
   }
-  IncomingServer.runtime.navBalance = data.navBalance
+  IncomingServer.runtime.softBalance = data.softBalance
   IncomingServer.runtime.subBalance = data.subBalance
-  RefillOutgoing.run({ navClient: IncomingServer.navClient }, IncomingServer.holdingProcessed)
+  RefillOutgoing.run({ softClient: IncomingServer.softClient }, IncomingServer.holdingProcessed)
 }
 
 IncomingServer.holdingProcessed = (success, data) => {
@@ -87,7 +87,7 @@ IncomingServer.holdingProcessed = (success, data) => {
   }
   SelectOutgoing.run({
     settings,
-    navClient: IncomingServer.navClient,
+    softClient: IncomingServer.softClient,
   }, IncomingServer.outgoingSelected)
 }
 
@@ -103,19 +103,19 @@ IncomingServer.outgoingSelected = (success, data) => {
       IncomingServer.paused = true
     }
     ReturnAllToSenders.run({
-      navClient: IncomingServer.navClient,
+      softClient: IncomingServer.softClient,
     }, IncomingServer.allPendingReturned)
     return
   }
 
   IncomingServer.runtime.chosenOutgoing = data.chosenOutgoing
-  IncomingServer.runtime.outgoingNavBalance = data.outgoingNavBalance
+  IncomingServer.runtime.outgoingSoftBalance = data.outgoingSoftBalance
   IncomingServer.runtime.holdingEncrypted = data.holdingEncrypted
   IncomingServer.runtime.outgoingPubKey = data.outgoingPubKey
 
   PrepareIncoming.run({
-    navClient: IncomingServer.navClient,
-    outgoingNavBalance: data.outgoingNavBalance,
+    softClient: IncomingServer.softClient,
+    outgoingSoftBalance: data.outgoingSoftBalance,
     subBalance: IncomingServer.runtime.subBalance,
     settings,
   }, IncomingServer.currentBatchPrepared)
@@ -148,7 +148,7 @@ IncomingServer.currentBatchPrepared = (success, data) => {
   if (IncomingServer.runtime.pendingToReturn && IncomingServer.runtime.pendingToReturn.length > 0) {
     Logger.writeLog('INC_011', 'failed to process some transactions', { success, data }, true)
     ReturnAllToSenders.fromList({
-      navClient: IncomingServer.navClient,
+      softClient: IncomingServer.softClient,
       transactionsToReturn: IncomingServer.runtime.pendingToReturn,
     }, IncomingServer.pendingFailedReturned)
     return
@@ -171,7 +171,7 @@ IncomingServer.pendingFailedReturned = (success, data) => {
     Logger.writeLog('INC_011A', 'failed to return failed pending to sender', { success, data }, true)
     IncomingServer.paused = true
     ReturnAllToSenders.run({
-      navClient: IncomingServer.navClient,
+      softClient: IncomingServer.softClient,
     }, IncomingServer.allPendingReturned)
   }
   if (!IncomingServer.runtime.currentBatch || lodash.size(IncomingServer.runtime.currentBatch) === 0) {
@@ -190,7 +190,7 @@ IncomingServer.retrievedSubchainAddresses = (success, data) => {
   if (!success || !data || !data.subAddresses) {
     Logger.writeLog('INC_009', 'failed to retrieve subchain addresses', { success, data }, true)
     ReturnAllToSenders.run({
-      navClient: IncomingServer.navClient,
+      softClient: IncomingServer.softClient,
     }, IncomingServer.allPendingReturned)
     return
   }
@@ -200,7 +200,7 @@ IncomingServer.retrievedSubchainAddresses = (success, data) => {
     currentFlattened: IncomingServer.runtime.currentFlattened,
     outgoingPubKey: IncomingServer.runtime.outgoingPubKey,
     subClient: IncomingServer.subClient,
-    navClient: IncomingServer.navClient,
+    softClient: IncomingServer.softClient,
     subAddresses: data.subAddresses,
     settings,
   }, IncomingServer.transactionsProcessed)
@@ -217,7 +217,7 @@ IncomingServer.transactionsProcessed = (success, data) => {
     Logger.writeLog('INC_010', 'failed to process transactions', { success, data }, true)
     IncomingServer.paused = true
     ReturnAllToSenders.run({
-      navClient: IncomingServer.navClient,
+      softClient: IncomingServer.softClient,
     }, IncomingServer.allPendingReturned)
     return
   }
@@ -238,7 +238,7 @@ IncomingServer.transactionsProcessed = (success, data) => {
     }
 
     ReturnAllToSenders.fromList({
-      navClient: IncomingServer.navClient,
+      softClient: IncomingServer.softClient,
       transactionsToReturn: IncomingServer.runtime.transactionsToReturn,
     }, IncomingServer.failedTransactionsReturned)
     return
@@ -263,7 +263,7 @@ IncomingServer.failedTransactionsReturned = (success, data) => {
   SpendToHolding.run({
     successfulSubTransactions: IncomingServer.runtime.successfulSubTransactions,
     holdingEncrypted: IncomingServer.runtime.holdingEncrypted,
-    navClient: IncomingServer.navClient,
+    softClient: IncomingServer.softClient,
   }, IncomingServer.spentToHolding)
 }
 

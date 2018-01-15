@@ -4,14 +4,14 @@ const config = require('config')
 const globalSettings = config.get('GLOBAL')
 
 let Logger = require('./Logger.js') //eslint-disable-line
-let NavCoin = require('./NavCoin.js') //eslint-disable-line
+let SoftCoin = require('./SoftCoin.js') //eslint-disable-line
 let EncryptedData = require('./EncryptedData.js') //eslint-disable-line
 const privateSettings = require('../settings/private.settings.json')
 
 const PrepareOutgoing = {}
 
 PrepareOutgoing.run = (options, callback) => {
-  const required = ['navClient', 'subClient', 'navBalance', 'settings']
+  const required = ['softClient', 'subClient', 'softBalance', 'settings']
   if (lodash.intersection(Object.keys(options), required).length !== required.length) {
     Logger.writeLog('PREPO_001', 'invalid options', { options, required })
     callback(false, { message: 'invalid options provided to ReturnAllToSenders.run' })
@@ -19,15 +19,15 @@ PrepareOutgoing.run = (options, callback) => {
   }
   PrepareOutgoing.runtime = {
     callback,
-    navClient: options.navClient,
+    softClient: options.softClient,
     subClient: options.subClient,
-    navBalance: options.navBalance,
+    softBalance: options.softBalance,
     settings: options.settings,
     failedSubTransactions: [],
     currentBatch: [],
     sumPending: 0,
   }
-  PrepareOutgoing.runtime.navClient.getBlockCount().then((blockHeight) => {
+  PrepareOutgoing.runtime.softClient.getBlockCount().then((blockHeight) => {
     PrepareOutgoing.runtime.currentBlockHeight = blockHeight
     PrepareOutgoing.getUnspent()
   }).catch((err) => {
@@ -43,7 +43,7 @@ PrepareOutgoing.getUnspent = () => {
       PrepareOutgoing.runtime.callback(false, { message: 'no unspent transactions found' })
       return
     }
-    NavCoin.filterUnspent({
+    SoftCoin.filterUnspent({
       unspent,
       client: PrepareOutgoing.runtime.subClient,
       accountName: privateSettings.account[globalSettings.serverType],
@@ -115,7 +115,7 @@ PrepareOutgoing.checkDecrypted = (success, data) => {
 }
 
 PrepareOutgoing.testDecrypted = (decrypted, transaction) => {
-  PrepareOutgoing.runtime.navClient.validateAddress(decrypted.n).then((addressInfo) => {
+  PrepareOutgoing.runtime.softClient.validateAddress(decrypted.n).then((addressInfo) => {
     if (addressInfo.isvalid !== true) {
       Logger.writeLog('PREPO_008', 'recipient address is invalid', { transaction })
       PrepareOutgoing.failedTransaction()
@@ -127,7 +127,7 @@ PrepareOutgoing.testDecrypted = (decrypted, transaction) => {
       PrepareOutgoing.processTransaction()
       return
     }
-    if (PrepareOutgoing.runtime.navBalance > PrepareOutgoing.runtime.sumPending + parseFloat(decrypted.v)) {
+    if (PrepareOutgoing.runtime.softBalance > PrepareOutgoing.runtime.sumPending + parseFloat(decrypted.v)) {
       PrepareOutgoing.runtime.sumPending = PrepareOutgoing.runtime.sumPending + parseFloat(decrypted.v)
       PrepareOutgoing.runtime.currentBatch.push({ decrypted, transaction })
       PrepareOutgoing.runtime.currentPending.splice(0, 1)
@@ -135,7 +135,7 @@ PrepareOutgoing.testDecrypted = (decrypted, transaction) => {
       return
     }
 
-    // max possible nav to send reached
+    // max possible soft to send reached
     // @TODO possibly continue to loop through the rest of the transactions to see if any smaller ones can jump ahead
     PrepareOutgoing.runtime.callback(true, {
       failedSubTransactions: PrepareOutgoing.runtime.failedSubTransactions,
@@ -143,7 +143,7 @@ PrepareOutgoing.testDecrypted = (decrypted, transaction) => {
     })
     return
   }).catch((err) => {
-    Logger.writeLog('PREPO_009', 'navClient failed validate address', { decrypted, transaction, error: err })
+    Logger.writeLog('PREPO_009', 'softClient failed validate address', { decrypted, transaction, error: err })
     PrepareOutgoing.failedTransaction()
   })
 }

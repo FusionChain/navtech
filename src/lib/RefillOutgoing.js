@@ -2,7 +2,7 @@ const lodash = require('lodash')
 
 const privateSettings = require('../settings/private.settings.json')
 let Logger = require('./Logger.js') // eslint-disable-line
-let NavCoin = require('./NavCoin.js') // eslint-disable-line
+let SoftCoin = require('./SoftCoin.js') // eslint-disable-line
 let EncryptedData = require('./EncryptedData.js') // eslint-disable-line
 let SendRawTransaction = require('./SendRawTransaction.js') // eslint-disable-line
 let RandomizeTransactions = require('./RandomizeTransactions.js') // eslint-disable-line
@@ -10,7 +10,7 @@ let RandomizeTransactions = require('./RandomizeTransactions.js') // eslint-disa
 const RefillOutgoing = {}
 
 RefillOutgoing.run = (options, callback) => {
-  const required = ['navClient']
+  const required = ['softClient']
   if (lodash.intersection(Object.keys(options), required).length !== required.length) {
     Logger.writeLog('RFL_001', 'invalid options', { options, required })
     callback(false, { message: 'invalid options provided to RefillOutgoing.checkHoldingAccount' })
@@ -19,22 +19,22 @@ RefillOutgoing.run = (options, callback) => {
 
   RefillOutgoing.runtime = {
     callback,
-    navClient: options.navClient,
+    softClient: options.softClient,
   }
 
   RefillOutgoing.getUnspent()
 }
 
 RefillOutgoing.getUnspent = () => {
-  RefillOutgoing.runtime.navClient.listUnspent().then((unspent) => {
+  RefillOutgoing.runtime.softClient.listUnspent().then((unspent) => {
     if (unspent.length < 1) {
       Logger.writeLog('RFL_002', 'no unspent in holding account', { unspent })
       RefillOutgoing.runtime.callback(true, { message: 'no unspent in holding account' })
       return
     }
-    NavCoin.filterUnspent({
+    SoftCoin.filterUnspent({
       unspent,
-      client: RefillOutgoing.runtime.navClient,
+      client: RefillOutgoing.runtime.softClient,
       accountName: privateSettings.account.HOLDING,
     },
     RefillOutgoing.holdingFiltered)
@@ -68,7 +68,7 @@ RefillOutgoing.checkIfHoldingIsSpendable = () => {
   if (RefillOutgoing.runtime.currentHolding[0].confirmations > privateSettings.minConfs) {
     EncryptedData.getEncrypted({
       transaction: RefillOutgoing.runtime.currentHolding[0],
-      client: RefillOutgoing.runtime.navClient,
+      client: RefillOutgoing.runtime.softClient,
     }, RefillOutgoing.holdingDecrypted)
     return
   }
@@ -107,8 +107,8 @@ RefillOutgoing.holdingDecrypted = (success, data) => {
   // @TODO check if addresses are valid?
 
   const numTransactions = Math.ceil(
-    Math.random() * (addresses.length - (privateSettings.minNavTransactions - 1))
-  ) + (privateSettings.minNavTransactions - 1)
+    Math.random() * (addresses.length - (privateSettings.minSoftTransactions - 1))
+  ) + (privateSettings.minSoftTransactions - 1)
 
   const randAddresses = []
   while (randAddresses.length < numTransactions) {
@@ -142,7 +142,7 @@ RefillOutgoing.sendRawRefillTransaction = (outgoingTransactions) => {
   SendRawTransaction.createRaw({
     outgoingTransactions,
     spentTransactions,
-    client: RefillOutgoing.runtime.navClient,
+    client: RefillOutgoing.runtime.softClient,
   }, RefillOutgoing.refillSent)
 }
 

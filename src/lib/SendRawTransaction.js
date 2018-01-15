@@ -4,7 +4,7 @@ const config = require('config')
 const lodash = require('lodash')
 
 let Logger = require('./Logger.js') //eslint-disable-line
-let NavCoin = require('./NavCoin.js') //eslint-disable-line
+let SoftCoin = require('./SoftCoin.js') //eslint-disable-line
 
 let globalSettings = config.get('GLOBAL') //eslint-disable-line
 
@@ -75,8 +75,8 @@ SendRawTransaction.signRaw = (rawTrans) => {
   }).catch((err) => {
     if (err.code === -13 && !SendRawTransaction.runtime.triedToUnlock) {
       SendRawTransaction.runtime.rawTrans = rawTrans
-      const type = (SendRawTransaction.runtime.client.port === settings.navCoin.port) ? 'navCoin' : 'subChain'
-      NavCoin.unlockWallet({ settings, client: SendRawTransaction.runtime.client, type }, SendRawTransaction.walletUnlocked)
+      const type = (SendRawTransaction.runtime.client.port === settings.softCoin.port) ? 'softCoin' : 'subChain'
+      SoftCoin.unlockWallet({ settings, client: SendRawTransaction.runtime.client, type }, SendRawTransaction.walletUnlocked)
       return
     }
     Logger.writeLog('RAW_004', 'unable to sign raw transaction', {

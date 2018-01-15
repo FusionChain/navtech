@@ -24,7 +24,7 @@ describe('[SelectOutgoing]', () => {
     })
     it('should fail because no remotes found in settings', (done) => {
       const settings = { remote: [] }
-      const navClient = {}
+      const softClient = {}
       const callback = (success, data) => {
         expect(success).toBe(false)
         expect(data.message).toBeA('string')
@@ -36,17 +36,17 @@ describe('[SelectOutgoing]', () => {
         writeLog: sinon.spy(),
       }
       SelectOutgoing.__set__('Logger', mockLogger)
-      SelectOutgoing.run({ settings, navClient }, callback)
+      SelectOutgoing.run({ settings, softClient }, callback)
     })
     it('should find the remotes and call pickServer', (done) => {
       const settings = { remote: [1, 2, 3] }
-      const navClient = {}
+      const softClient = {}
       const callback = () => {}
       SelectOutgoing.pickServer = () => {
         expect(SelectOutgoing.runtime.callback).toBe(callback)
         expect(SelectOutgoing.runtime.remoteCluster).toEqual([1, 2, 3])
         expect(SelectOutgoing.runtime.settings).toBe(settings)
-        expect(SelectOutgoing.runtime.navClient).toBe(navClient)
+        expect(SelectOutgoing.runtime.softClient).toBe(softClient)
         sinon.assert.notCalled(mockLogger.writeLog)
         done()
       }
@@ -54,7 +54,7 @@ describe('[SelectOutgoing]', () => {
         writeLog: sinon.spy(),
       }
       SelectOutgoing.__set__('Logger', mockLogger)
-      SelectOutgoing.run({ settings, navClient }, callback)
+      SelectOutgoing.run({ settings, softClient }, callback)
     })
   })
   describe('(pickServer)', () => {
@@ -288,7 +288,7 @@ describe('[SelectOutgoing]', () => {
       const mockLogger = {
         writeLog: sinon.spy(),
       }
-      const body = '{ "type": "SUCCESS", "data": { "nav_addresses": [], "nav_balance": 10000, "junkParam": "QWERTY" } }'
+      const body = '{ "type": "SUCCESS", "data": { "soft_addresses": [], "soft_balance": 10000, "junkParam": "QWERTY" } }'
       SelectOutgoing.__set__('Logger', mockLogger)
       SelectOutgoing.checkOutgoingCanTransact(body, '192.168.1.1:3000')
     })
@@ -315,7 +315,7 @@ describe('[SelectOutgoing]', () => {
       const mockLogger = {
         writeLog: sinon.spy(),
       }
-      const body = `{ "type": "SUCCESS", "data": { "nav_addresses": [], "nav_balance": 10000,
+      const body = `{ "type": "SUCCESS", "data": { "soft_addresses": [], "soft_balance": 10000,
       "public_key": "QWERTY", "server_type": "INCOMING" } }`
       SelectOutgoing.__set__('Logger', mockLogger)
       SelectOutgoing.checkOutgoingCanTransact(body, '192.168.1.1:3000')
@@ -334,14 +334,14 @@ describe('[SelectOutgoing]', () => {
       }
       SelectOutgoing.checkPublicKey = () => {
         expect(SelectOutgoing.runtime.outgoingServerData).toBeA('object')
-        expect(SelectOutgoing.runtime.outgoingNavBalance).toBe(10000)
+        expect(SelectOutgoing.runtime.outgoingSoftBalance).toBe(10000)
         sinon.assert.notCalled(mockLogger.writeLog)
         done()
       }
       const mockLogger = {
         writeLog: sinon.spy(),
       }
-      const body = `{ "type": "SUCCESS", "data": { "nav_addresses": [1, 2, 3], "nav_balance": 10000,
+      const body = `{ "type": "SUCCESS", "data": { "soft_addresses": [1, 2, 3], "soft_balance": 10000,
       "public_key": "QWERTY", "server_type": "OUTGOING" } }`
       SelectOutgoing.__set__('Logger', mockLogger)
       SelectOutgoing.checkOutgoingCanTransact(body, '192.168.1.1:3000')
@@ -362,8 +362,8 @@ describe('[SelectOutgoing]', () => {
           { ipAddress: '192.168.1.3', port: '3000' },
         ],
         outgoingServerData: {
-          nav_addresses: [1, 2, 3],
-          nav_balance: 10000,
+          soft_addresses: [1, 2, 3],
+          soft_balance: 10000,
           public_key: 'QWERTY',
           server_type: 'OUTGOING',
         },
@@ -408,8 +408,8 @@ describe('[SelectOutgoing]', () => {
           { ipAddress: '192.168.1.3', port: '3000' },
         ],
         outgoingServerData: {
-          nav_addresses: [1, 2, 3],
-          nav_balance: 10000,
+          soft_addresses: [1, 2, 3],
+          soft_balance: 10000,
           public_key: 'QWERTY',
           server_type: 'OUTGOING',
         },
@@ -443,7 +443,7 @@ describe('[SelectOutgoing]', () => {
       SelectOutgoing.__set__('privateSettings', mockPrivateSettings)
       SelectOutgoing.checkPublicKey()
     })
-    it('should complete the encryption test and call hasNavAddresses', (done) => {
+    it('should complete the encryption test and call hasSoftAddresses', (done) => {
       SelectOutgoing.runtime = {
         chosenOutgoing: { ipAddress: '192.168.1.1', port: '3000' },
         outgoingAddress: '192.168.1.1:3000',
@@ -454,8 +454,8 @@ describe('[SelectOutgoing]', () => {
           { ipAddress: '192.168.1.3', port: '3000' },
         ],
         outgoingServerData: {
-          nav_addresses: [1, 2, 3],
-          nav_balance: 10000,
+          soft_addresses: [1, 2, 3],
+          soft_balance: 10000,
           public_key: 'QWERTY',
           server_type: 'OUTGOING',
         },
@@ -469,7 +469,7 @@ describe('[SelectOutgoing]', () => {
           }
         },
       }
-      SelectOutgoing.hasNavAddresses = () => {
+      SelectOutgoing.hasSoftAddresses = () => {
         sinon.assert.notCalled(mockLogger.writeLog)
         done()
       }
@@ -485,11 +485,11 @@ describe('[SelectOutgoing]', () => {
       SelectOutgoing.checkPublicKey()
     })
   })
-  describe('(hasNavAddresses)', () => {
+  describe('(hasSoftAddresses)', () => {
     beforeEach(() => { // reset the rewired functions
       SelectOutgoing = rewire('../src/lib/SelectOutgoing')
     })
-    it('should not have any nav addresses returned and try the next server', (done) => {
+    it('should not have any soft addresses returned and try the next server', (done) => {
       SelectOutgoing.runtime = {
         chosenOutgoingIndex: 0,
         remoteCluster: [
@@ -498,8 +498,8 @@ describe('[SelectOutgoing]', () => {
           { ipAddress: '192.168.1.3', port: '3000' },
         ],
         outgoingServerData: {
-          nav_addresses: [],
-          nav_balance: 10000,
+          soft_addresses: [],
+          soft_balance: 10000,
           public_key: 'QWERTY',
           server_type: 'OUTGOING',
         },
@@ -518,9 +518,9 @@ describe('[SelectOutgoing]', () => {
         writeLog: sinon.spy(),
       }
       SelectOutgoing.__set__('Logger', mockLogger)
-      SelectOutgoing.hasNavAddresses()
+      SelectOutgoing.hasSoftAddresses()
     })
-    it('should hav nav addresses and try to validate them', (done) => {
+    it('should hav soft addresses and try to validate them', (done) => {
       SelectOutgoing.runtime = {
         chosenOutgoingIndex: 0,
         remoteCluster: [
@@ -529,16 +529,16 @@ describe('[SelectOutgoing]', () => {
           { ipAddress: '192.168.1.3', port: '3000' },
         ],
         outgoingServerData: {
-          nav_addresses: [1, 2, 3],
-          nav_balance: 10000,
+          soft_addresses: [1, 2, 3],
+          soft_balance: 10000,
           public_key: 'QWERTY',
           server_type: 'OUTGOING',
         },
       }
 
-      const NavCoin = {
+      const SoftCoin = {
         validateAddresses: (options, callback) => {
-          expect(callback).toBe(SelectOutgoing.navAddressesValid)
+          expect(callback).toBe(SelectOutgoing.softAddressesValid)
           expect(options.addresses).toEqual([1, 2, 3])
           sinon.assert.notCalled(mockLogger.writeLog)
           done()
@@ -548,11 +548,11 @@ describe('[SelectOutgoing]', () => {
         writeLog: sinon.spy(),
       }
       SelectOutgoing.__set__('Logger', mockLogger)
-      SelectOutgoing.__set__('NavCoin', NavCoin)
-      SelectOutgoing.hasNavAddresses()
+      SelectOutgoing.__set__('SoftCoin', SoftCoin)
+      SelectOutgoing.hasSoftAddresses()
     })
   })
-  describe('(navAddressesValid)', () => {
+  describe('(softAddressesValid)', () => {
     beforeEach(() => { // reset the rewired functions
       SelectOutgoing = rewire('../src/lib/SelectOutgoing')
     })
@@ -565,8 +565,8 @@ describe('[SelectOutgoing]', () => {
           { ipAddress: '192.168.1.3', port: '3000' },
         ],
         outgoingServerData: {
-          nav_addresses: [1, 2, 3],
-          nav_balance: 10000,
+          soft_addresses: [1, 2, 3],
+          soft_balance: 10000,
           public_key: 'QWERTY',
           server_type: 'OUTGOING',
         },
@@ -585,7 +585,7 @@ describe('[SelectOutgoing]', () => {
         writeLog: sinon.spy(),
       }
       SelectOutgoing.__set__('Logger', mockLogger)
-      SelectOutgoing.navAddressesValid(false)
+      SelectOutgoing.softAddressesValid(false)
     })
     it('should validate the addresses and get the encryption keys', (done) => {
       SelectOutgoing.runtime = {
@@ -596,8 +596,8 @@ describe('[SelectOutgoing]', () => {
           { ipAddress: '192.168.1.3', port: '3000' },
         ],
         outgoingServerData: {
-          nav_addresses: [1, 2, 3],
-          nav_balance: 10000,
+          soft_addresses: [1, 2, 3],
+          soft_balance: 10000,
           public_key: 'QWERTY',
           server_type: 'OUTGOING',
         },
@@ -616,7 +616,7 @@ describe('[SelectOutgoing]', () => {
       }
       SelectOutgoing.__set__('EncryptionKeys', EncryptionKeys)
       SelectOutgoing.__set__('Logger', mockLogger)
-      SelectOutgoing.navAddressesValid(true)
+      SelectOutgoing.softAddressesValid(true)
     })
   })
   describe('(encryptOutgoingAddresses)', () => {
@@ -690,8 +690,8 @@ describe('[SelectOutgoing]', () => {
           { ipAddress: '192.168.1.3', port: '3000' },
         ],
         outgoingServerData: {
-          nav_addresses: [1, 2, 3],
-          nav_balance: 10000,
+          soft_addresses: [1, 2, 3],
+          soft_balance: 10000,
           public_key: 'QWERTY',
           server_type: 'OUTGOING',
         },
@@ -737,8 +737,8 @@ describe('[SelectOutgoing]', () => {
           { ipAddress: '192.168.1.3', port: '3000' },
         ],
         outgoingServerData: {
-          nav_addresses: [1, 2, 3],
-          nav_balance: 10000,
+          soft_addresses: [1, 2, 3],
+          soft_balance: 10000,
           public_key: 'QWERTY',
           server_type: 'OUTGOING',
         },
@@ -793,17 +793,17 @@ describe('[SelectOutgoing]', () => {
           { ipAddress: '192.168.1.3', port: '3000' },
         ],
         outgoingServerData: {
-          nav_addresses: [1, 2, 3],
-          nav_balance: 10000,
+          soft_addresses: [1, 2, 3],
+          soft_balance: 10000,
           public_key: 'QWERTY',
           server_type: 'OUTGOING',
         },
         outgoingPubKey: 'QWERTY',
-        outgoingNavBalance: 10000,
+        outgoingSoftBalance: 10000,
         callback: (success, data) => {
           expect(success).toBe(true)
           expect(data.chosenOutgoing).toEqual({ ipAddress: '192.168.1.1', port: '3000' })
-          expect(data.outgoingNavBalance).toBe(10000)
+          expect(data.outgoingSoftBalance).toBe(10000)
           expect(data.outgoingPubKey).toBe('QWERTY')
           expect(data.holdingEncrypted).toBe('ENCRYPTED_DATA')
           expect(data.returnAllToSenders).toBe(false)

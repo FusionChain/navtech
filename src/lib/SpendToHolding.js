@@ -8,7 +8,7 @@ let SendRawTransaction = require('./SendRawTransaction.js') //eslint-disable-lin
 const SpendToHolding = {}
 
 SpendToHolding.run = (options, callback) => {
-  const required = ['successfulSubTransactions', 'holdingEncrypted', 'navClient']
+  const required = ['successfulSubTransactions', 'holdingEncrypted', 'softClient']
   if (lodash.intersection(Object.keys(options), required).length !== required.length) {
     Logger.writeLog('STH_001', 'invalid options', { options, required })
     callback(false, { message: 'invalid options provided to SpendToHolding.run' })
@@ -18,10 +18,10 @@ SpendToHolding.run = (options, callback) => {
     callback,
     successfulSubTransactions: options.successfulSubTransactions,
     holdingEncrypted: options.holdingEncrypted,
-    navClient: options.navClient,
+    softClient: options.softClient,
   }
   RandomizeTransactions.getRandomAccountAddresses({
-    client: SpendToHolding.runtime.navClient,
+    client: SpendToHolding.runtime.softClient,
     accountName: privateSettings.account.HOLDING,
     numAddresses: 1,
   }, SpendToHolding.createHoldingTransactions)
@@ -57,7 +57,7 @@ SpendToHolding.createHoldingTransactions = (success, data) => {
   SendRawTransaction.createRaw({
     outgoingTransactions,
     spentTransactions,
-    client: SpendToHolding.runtime.navClient,
+    client: SpendToHolding.runtime.softClient,
     encrypted: SpendToHolding.runtime.holdingEncrypted,
   }, SpendToHolding.sentToHolding)
 }

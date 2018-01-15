@@ -7,7 +7,7 @@ const privateSettings = require('../settings/private.settings.json')
 const PayoutFee = {}
 
 PayoutFee.run = (options, callback) => {
-  const required = ['settings', 'navClient']
+  const required = ['settings', 'softClient']
   if (lodash.intersection(Object.keys(options), required).length !== required.length) {
     Logger.writeLog('PAY_001', 'invalid options', { options, required })
     callback(false, { message: 'invalid options provided to PayoutFee.run' })
@@ -16,35 +16,35 @@ PayoutFee.run = (options, callback) => {
   PayoutFee.runtime = {
     callback,
     settings: options.settings,
-    navClient: options.navClient,
+    softClient: options.softClient,
   }
   PayoutFee.send()
 }
 
 PayoutFee.send = () => {
-  PayoutFee.runtime.navClient.listUnspent(200).then((unspent) => {
-    let navBalanceSat = 0
+  PayoutFee.runtime.softClient.listUnspent(200).then((unspent) => {
+    let softBalanceSat = 0
     const satoshiFactor = 100000000
     for (const pending of unspent) {
-      navBalanceSat += Math.round(pending.amount * satoshiFactor)
+      softBalanceSat += Math.round(pending.amount * satoshiFactor)
     }
-    const navBalance = navBalanceSat / satoshiFactor
-    if (navBalance < PayoutFee.runtime.settings.navPoolAmount) {
-      Logger.writeLog('PAY_002', 'nav pool balance less than expected', {
-        navPoolAmount: PayoutFee.runtime.settings.navPoolAmount,
-        navBalance,
+    const softBalance = softBalanceSat / satoshiFactor
+    if (softBalance < PayoutFee.runtime.settings.softPoolAmount) {
+      Logger.writeLog('PAY_002', 'soft pool balance less than expected', {
+        softPoolAmount: PayoutFee.runtime.settings.softPoolAmount,
+        softBalance,
       })
-      PayoutFee.runtime.callback(false, { message: 'nav pool balance less than expected' })
+      PayoutFee.runtime.callback(false, { message: 'soft pool balance less than expected' })
       return
     }
 
-    const txFeeAccrued = (navBalance - PayoutFee.runtime.settings.navPoolAmount) - privateSettings.txFee
+    const txFeeAccrued = (softBalance - PayoutFee.runtime.settings.softPoolAmount) - privateSettings.txFee
     if (txFeeAccrued < PayoutFee.runtime.settings.txFeePayoutMin) {
       PayoutFee.runtime.callback(false, { message: 'fee accrued less than payout minimum' })
       return
     }
     SendToAddress.send({
-      client: PayoutFee.runtime.navClient,
+      client: PayoutFee.runtime.softClient,
       address: PayoutFee.runtime.settings.anonTxFeeAddress,
       amount: txFeeAccrued,
       transaction: { txid: 'TX_FEE_PAYOUT' },

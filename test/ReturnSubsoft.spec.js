@@ -4,9 +4,9 @@ const expect = require('expect')
 const rewire = require('rewire')
 const sinon = require('sinon')
 
-let ReturnSubnav = rewire('../src/lib/ReturnSubnav')
+let ReturnSubsoft = rewire('../src/lib/ReturnSubsoft')
 
-describe('[ReturnSubnav]', () => {
+describe('[ReturnSubsoft]', () => {
   describe('(run)', () => {
     it('should fail on params', (done) => {
       const callback = (success, data) => {
@@ -19,34 +19,34 @@ describe('[ReturnSubnav]', () => {
       const mockLogger = {
         writeLog: sinon.spy(),
       }
-      ReturnSubnav.__set__('Logger', mockLogger)
-      ReturnSubnav.run({ junkParam: 1234 }, callback)
+      ReturnSubsoft.__set__('Logger', mockLogger)
+      ReturnSubsoft.run({ junkParam: 1234 }, callback)
     })
     it('should have the right params and call sendToIncoming', (done) => {
       const callback = () => {}
       const subClient = {}
       const settings = {}
-      ReturnSubnav.sendToIncoming = () => {
-        expect(ReturnSubnav.runtime.callback).toBe(callback)
-        expect(ReturnSubnav.runtime.subClient).toBe(subClient)
-        expect(ReturnSubnav.runtime.transactions).toEqual([1, 2, 3, 4])
-        expect(ReturnSubnav.runtime.settings).toBe(settings)
+      ReturnSubsoft.sendToIncoming = () => {
+        expect(ReturnSubsoft.runtime.callback).toBe(callback)
+        expect(ReturnSubsoft.runtime.subClient).toBe(subClient)
+        expect(ReturnSubsoft.runtime.transactions).toEqual([1, 2, 3, 4])
+        expect(ReturnSubsoft.runtime.settings).toBe(settings)
         sinon.assert.notCalled(mockLogger.writeLog)
         done()
       }
       const mockLogger = {
         writeLog: sinon.spy(),
       }
-      ReturnSubnav.__set__('Logger', mockLogger)
-      ReturnSubnav.run({ transactions: [1, 2, 3, 4], settings, subClient }, callback)
+      ReturnSubsoft.__set__('Logger', mockLogger)
+      ReturnSubsoft.run({ transactions: [1, 2, 3, 4], settings, subClient }, callback)
     })
   })
   describe('(sendToIncoming)', () => {
     beforeEach(() => { // reset the rewired functions
-      ReturnSubnav = rewire('../src/lib/ReturnSubnav')
+      ReturnSubsoft = rewire('../src/lib/ReturnSubsoft')
     })
     it('should call the callback when theres no transactions left', (done) => {
-      ReturnSubnav.runtime = {
+      ReturnSubsoft.runtime = {
         remainingTransactions: [],
         callback: (success, data) => {
           expect(success).toBe(true)
@@ -58,18 +58,18 @@ describe('[ReturnSubnav]', () => {
       const mockLogger = {
         writeLog: sinon.spy(),
       }
-      ReturnSubnav.__set__('Logger', mockLogger)
-      ReturnSubnav.sendToIncoming()
+      ReturnSubsoft.__set__('Logger', mockLogger)
+      ReturnSubsoft.sendToIncoming()
     })
     it('should have transactions to return so call the send function', (done) => {
-      ReturnSubnav.runtime = {
+      ReturnSubsoft.runtime = {
         remainingTransactions: [{ transaction: 1 }, { transaction: 2 }],
         subClient: {},
       }
       const ReturnToSender = {
         send: (options, callback) => {
-          expect(callback).toBe(ReturnSubnav.sent)
-          expect(options.client).toBe(ReturnSubnav.runtime.subClient)
+          expect(callback).toBe(ReturnSubsoft.sent)
+          expect(options.client).toBe(ReturnSubsoft.runtime.subClient)
           expect(options.transaction).toEqual(1)
           sinon.assert.notCalled(mockLogger.writeLog)
           done()
@@ -78,20 +78,20 @@ describe('[ReturnSubnav]', () => {
       const mockLogger = {
         writeLog: sinon.spy(),
       }
-      ReturnSubnav.__set__('Logger', mockLogger)
-      ReturnSubnav.__set__('ReturnToSender', ReturnToSender)
-      ReturnSubnav.sendToIncoming()
+      ReturnSubsoft.__set__('Logger', mockLogger)
+      ReturnSubsoft.__set__('ReturnToSender', ReturnToSender)
+      ReturnSubsoft.sendToIncoming()
     })
   })
   describe('(sent)', () => {
     beforeEach(() => { // reset the rewired functions
-      ReturnSubnav = rewire('../src/lib/ReturnSubnav')
+      ReturnSubsoft = rewire('../src/lib/ReturnSubsoft')
     })
-    it('should fail because it couldnt return subnav (returned false)', (done) => {
-      ReturnSubnav.runtime = {
+    it('should fail because it couldnt return subsoft (returned false)', (done) => {
+      ReturnSubsoft.runtime = {
         remainingTransactions: [1, 2, 3, 4],
       }
-      ReturnSubnav.runtime = {
+      ReturnSubsoft.runtime = {
         callback: (success, data) => {
           expect(success).toBe(false)
           expect(data.message).toBeA('string')
@@ -104,14 +104,14 @@ describe('[ReturnSubnav]', () => {
       const mockLogger = {
         writeLog: sinon.spy(),
       }
-      ReturnSubnav.__set__('Logger', mockLogger)
-      ReturnSubnav.sent(false)
+      ReturnSubsoft.__set__('Logger', mockLogger)
+      ReturnSubsoft.sent(false)
     })
-    it('should fail because it couldnt return subnav (no rawOutcome)', (done) => {
-      ReturnSubnav.runtime = {
+    it('should fail because it couldnt return subsoft (no rawOutcome)', (done) => {
+      ReturnSubsoft.runtime = {
         remainingTransactions: [1, 2, 3, 4],
       }
-      ReturnSubnav.runtime = {
+      ReturnSubsoft.runtime = {
         callback: (success, data) => {
           expect(success).toBe(false)
           expect(data.message).toBeA('string')
@@ -124,15 +124,15 @@ describe('[ReturnSubnav]', () => {
       const mockLogger = {
         writeLog: sinon.spy(),
       }
-      ReturnSubnav.__set__('Logger', mockLogger)
-      ReturnSubnav.sent(true, { junkParam: '1234' })
+      ReturnSubsoft.__set__('Logger', mockLogger)
+      ReturnSubsoft.sent(true, { junkParam: '1234' })
     })
-    it('should succeed and proceed to the next subnav transaction', (done) => {
-      ReturnSubnav.runtime = {
+    it('should succeed and proceed to the next subsoft transaction', (done) => {
+      ReturnSubsoft.runtime = {
         remainingTransactions: [1, 2, 3, 4],
       }
-      ReturnSubnav.sendToIncoming = () => {
-        expect(ReturnSubnav.runtime.remainingTransactions).toEqual([2, 3, 4])
+      ReturnSubsoft.sendToIncoming = () => {
+        expect(ReturnSubsoft.runtime.remainingTransactions).toEqual([2, 3, 4])
         sinon.assert.notCalled(mockLogger.writeLog)
         done()
       }
@@ -140,8 +140,8 @@ describe('[ReturnSubnav]', () => {
       const mockLogger = {
         writeLog: sinon.spy(),
       }
-      ReturnSubnav.__set__('Logger', mockLogger)
-      ReturnSubnav.sent(true, { rawOutcome: '1234' })
+      ReturnSubsoft.__set__('Logger', mockLogger)
+      ReturnSubsoft.sent(true, { rawOutcome: '1234' })
     })
   })
 })

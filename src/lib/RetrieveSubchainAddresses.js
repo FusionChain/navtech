@@ -2,7 +2,7 @@ const lodash = require('lodash')
 let request = require('request') //eslint-disable-line
 
 let Logger = require('./Logger.js') //eslint-disable-line
-let NavCoin = require('./NavCoin.js') //eslint-disable-line
+let SoftCoin = require('./SoftCoin.js') //eslint-disable-line
 
 const RetrieveSubchainAddresses = {}
 
@@ -94,7 +94,7 @@ RetrieveSubchainAddresses.checkSubAddresses = (outgoingSubAddresses) => {
     return
   }
   RetrieveSubchainAddresses.runtime.outgoingSubAddresses = outgoingSubAddresses
-  NavCoin.validateAddresses({
+  SoftCoin.validateAddresses({
     client: RetrieveSubchainAddresses.runtime.subClient,
     addresses: outgoingSubAddresses,
   }, RetrieveSubchainAddresses.subAddressesValid)

@@ -20,21 +20,21 @@
     "scriptInterval": 120000,
     "minAmount": 10,
     "maxAmount": 10000,
-    "navPoolAmount": 50000,
+    "softPoolAmount": 50000,
     "txFeePayoutMin": 100,
-    "anonTxFeeAddress": "NAVCOIN_TX_FEE_ADDRESS",
+    "anonTxFeeAddress": "SOFTCOIN_TX_FEE_ADDRESS",
     "notificationEmail": "youremail@gmail.com",
     "smtp": {
       "user": "yoursmtp@gmail.com",
       "pass": "SMTP_EMAIL_PASSWORD",
       "server": "smtp.gmail.com"
     },
-    "navCoin": {
+    "softCoin": {
       "user": "RPC_USERNAME",
       "pass": "RPC_PASSWORD",
       "ip": "127.0.0.1",
       "port": "44444",
-      "walletPassphrase": "NAVCOIN_WALLET_PASSPHRASE"
+      "walletPassphrase": "SOFTCOIN_WALLET_PASSPHRASE"
     },
     "subChain": {
       "user": "RPC_USERNAME",

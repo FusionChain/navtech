@@ -29,9 +29,9 @@ describe('[PrepareOutgoing]', () => {
     it('should set the runtime variables and fail to get the blockHeight', (done) => {
       const callback = () => {
         expect(PrepareOutgoing.runtime.callback).toBe(callback)
-        expect(PrepareOutgoing.runtime.navClient).toBe(mockClient)
+        expect(PrepareOutgoing.runtime.softClient).toBe(mockClient)
         expect(PrepareOutgoing.runtime.subClient).toBe(mockClient)
-        expect(PrepareOutgoing.runtime.navBalance).toBe(50000)
+        expect(PrepareOutgoing.runtime.softBalance).toBe(50000)
         expect(PrepareOutgoing.runtime.settings).toEqual({ test: 1 })
         expect(PrepareOutgoing.runtime.failedSubTransactions).toEqual([])
         expect(PrepareOutgoing.runtime.currentBatch).toEqual([])
@@ -53,18 +53,18 @@ describe('[PrepareOutgoing]', () => {
       }
 
       PrepareOutgoing.run({
-        navClient: mockClient,
+        softClient: mockClient,
         subClient: mockClient,
-        navBalance: 50000,
+        softBalance: 50000,
         settings: { test: 1 },
       }, callback)
     })
     it('should set the runtime variables and call getUnspent', (done) => {
       PrepareOutgoing.getUnspent = () => {
         expect(PrepareOutgoing.runtime.callback).toBe(callback)
-        expect(PrepareOutgoing.runtime.navClient).toBe(mockClient)
-        expect(PrepareOutgoing.runtime.navClient).toBe(mockClient)
-        expect(PrepareOutgoing.runtime.navBalance).toBe(50000)
+        expect(PrepareOutgoing.runtime.softClient).toBe(mockClient)
+        expect(PrepareOutgoing.runtime.softClient).toBe(mockClient)
+        expect(PrepareOutgoing.runtime.softBalance).toBe(50000)
         expect(PrepareOutgoing.runtime.settings).toEqual({ test: 1 })
         expect(PrepareOutgoing.runtime.failedSubTransactions).toEqual([])
         expect(PrepareOutgoing.runtime.currentBatch).toEqual([])
@@ -86,9 +86,9 @@ describe('[PrepareOutgoing]', () => {
       }
 
       PrepareOutgoing.run({
-        navClient: mockClient,
+        softClient: mockClient,
         subClient: mockClient,
-        navBalance: 50000,
+        softBalance: 50000,
         settings: { test: 1 },
       }, callback)
     })
@@ -139,7 +139,7 @@ describe('[PrepareOutgoing]', () => {
       PrepareOutgoing.getUnspent()
     })
     it('should find unspent and call the filter function', (done) => {
-      const mockNavCoin = {
+      const mockSoftCoin = {
         filterUnspent: (options, parsedCallback) => {
           expect(parsedCallback).toBe(PrepareOutgoing.unspentFiltered)
           expect(options.unspent).toBe(unspent)
@@ -158,7 +158,7 @@ describe('[PrepareOutgoing]', () => {
         writeLog: sinon.spy(),
       }
       PrepareOutgoing.__set__('Logger', mockLogger)
-      PrepareOutgoing.__set__('NavCoin', mockNavCoin)
+      PrepareOutgoing.__set__('SoftCoin', mockSoftCoin)
       PrepareOutgoing.runtime = {
         subClient: mockClient,
         callback,
@@ -519,7 +519,7 @@ describe('[PrepareOutgoing]', () => {
         amount: 100,
       }
       PrepareOutgoing.runtime = {
-        navClient: mockClient,
+        softClient: mockClient,
       }
       PrepareOutgoing.__set__('Logger', mockLogger)
       PrepareOutgoing.testDecrypted(decrypted, transaction)
@@ -546,7 +546,7 @@ describe('[PrepareOutgoing]', () => {
         amount: 100,
       }
       PrepareOutgoing.runtime = {
-        navClient: mockClient,
+        softClient: mockClient,
       }
       PrepareOutgoing.__set__('Logger', mockLogger)
       PrepareOutgoing.testDecrypted(decrypted, transaction)
@@ -575,8 +575,8 @@ describe('[PrepareOutgoing]', () => {
         amount: 100,
       }
       PrepareOutgoing.runtime = {
-        navClient: mockClient,
-        navBalance: 50000,
+        softClient: mockClient,
+        softBalance: 50000,
         sumPending: 0,
         currentBatch: [],
         currentPending: [1, 2, 3],
@@ -611,8 +611,8 @@ describe('[PrepareOutgoing]', () => {
         amount: 100,
       }
       PrepareOutgoing.runtime = {
-        navClient: mockClient,
-        navBalance: 50000,
+        softClient: mockClient,
+        softBalance: 50000,
         sumPending: 0,
         currentBatch: [],
         currentPending: [1, 2, 3],
@@ -638,8 +638,8 @@ describe('[PrepareOutgoing]', () => {
         amount: 100,
       }
       PrepareOutgoing.runtime = {
-        navClient: mockClient,
-        navBalance: 50000,
+        softClient: mockClient,
+        softBalance: 50000,
         sumPending: 49500,
         currentBatch: [4, 5],
         failedSubTransactions: [{ tx: 10 }, { tx: 155 }],

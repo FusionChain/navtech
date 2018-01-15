@@ -25,10 +25,10 @@ describe('[ReturnAllToSenders]', () => {
     })
     it('should procedd to run getUnspent', (done) => {
       const callback = () => {}
-      const navClient = {}
+      const softClient = {}
       ReturnAllToSenders.getUnspent = () => {
         expect(ReturnAllToSenders.runtime.callback).toBe(callback)
-        expect(ReturnAllToSenders.runtime.navClient).toBe(navClient)
+        expect(ReturnAllToSenders.runtime.softClient).toBe(softClient)
         sinon.assert.notCalled(mockLogger.writeLog)
         done()
       }
@@ -36,7 +36,7 @@ describe('[ReturnAllToSenders]', () => {
         writeLog: sinon.spy(),
       }
       ReturnAllToSenders.__set__('Logger', mockLogger)
-      ReturnAllToSenders.run({ navClient }, callback)
+      ReturnAllToSenders.run({ softClient }, callback)
     })
   })
   describe('(fromList)', () => {
@@ -59,11 +59,11 @@ describe('[ReturnAllToSenders]', () => {
     })
     it('should procedd to run returnToSender', (done) => {
       const callback = () => {}
-      const navClient = {}
+      const softClient = {}
       const transactionsToReturn = [1, 2, 3]
       ReturnAllToSenders.returnToSender = () => {
         expect(ReturnAllToSenders.runtime.callback).toBe(callback)
-        expect(ReturnAllToSenders.runtime.navClient).toBe(navClient)
+        expect(ReturnAllToSenders.runtime.softClient).toBe(softClient)
         expect(ReturnAllToSenders.runtime.transactionsToReturn).toBe(transactionsToReturn)
         sinon.assert.notCalled(mockLogger.writeLog)
         done()
@@ -72,7 +72,7 @@ describe('[ReturnAllToSenders]', () => {
         writeLog: sinon.spy(),
       }
       ReturnAllToSenders.__set__('Logger', mockLogger)
-      ReturnAllToSenders.fromList({ navClient, transactionsToReturn }, callback)
+      ReturnAllToSenders.fromList({ softClient, transactionsToReturn }, callback)
     })
   })
   describe('(getUnspent)', () => {
@@ -81,7 +81,7 @@ describe('[ReturnAllToSenders]', () => {
     })
     it('should fail to get the unspent', (done) => {
       ReturnAllToSenders.runtime = {
-        navClient: {
+        softClient: {
           listUnspent: () => { return Promise.reject({ code: -17 }) },
         },
         callback: (success, data) => {
@@ -100,7 +100,7 @@ describe('[ReturnAllToSenders]', () => {
     })
     it('should get unspent but there are none', (done) => {
       ReturnAllToSenders.runtime = {
-        navClient: {
+        softClient: {
           listUnspent: () => { return Promise.resolve([]) },
         },
         callback: (success, data) => {
@@ -118,15 +118,15 @@ describe('[ReturnAllToSenders]', () => {
     })
     it('should get unspent and call the filter function', (done) => {
       ReturnAllToSenders.runtime = {
-        navClient: {
+        softClient: {
           listUnspent: () => { return Promise.resolve([1, 2, 3]) },
         },
       }
-      const NavCoin = {
+      const SoftCoin = {
         filterUnspent: (options, callback) => {
           expect(callback).toBe(ReturnAllToSenders.unspentFiltered)
           expect(options.unspent).toEqual([1, 2, 3])
-          expect(options.client).toBe(ReturnAllToSenders.runtime.navClient)
+          expect(options.client).toBe(ReturnAllToSenders.runtime.softClient)
           expect(options.accountName).toBe(privateSettings.account.INCOMING)
           sinon.assert.notCalled(mockLogger.writeLog)
           done()
@@ -136,7 +136,7 @@ describe('[ReturnAllToSenders]', () => {
         writeLog: sinon.spy(),
       }
       ReturnAllToSenders.__set__('Logger', mockLogger)
-      ReturnAllToSenders.__set__('NavCoin', NavCoin)
+      ReturnAllToSenders.__set__('SoftCoin', SoftCoin)
       ReturnAllToSenders.getUnspent()
     })
   })
@@ -146,7 +146,7 @@ describe('[ReturnAllToSenders]', () => {
     })
     it('should fail to filter the unspent (returned false)', (done) => {
       ReturnAllToSenders.runtime = {
-        navClient: {
+        softClient: {
           listUnspent: () => { return Promise.reject({ code: -17 }) },
         },
         callback: (success, data) => {
@@ -165,7 +165,7 @@ describe('[ReturnAllToSenders]', () => {
     })
     it('should fail to filter the unspent (no data)', (done) => {
       ReturnAllToSenders.runtime = {
-        navClient: {
+        softClient: {
           listUnspent: () => { return Promise.reject({ code: -17 }) },
         },
         callback: (success, data) => {
@@ -184,7 +184,7 @@ describe('[ReturnAllToSenders]', () => {
     })
     it('should fail to filter the unspent (no currentPending)', (done) => {
       ReturnAllToSenders.runtime = {
-        navClient: {
+        softClient: {
           listUnspent: () => { return Promise.reject({ code: -17 }) },
         },
         callback: (success, data) => {
@@ -203,7 +203,7 @@ describe('[ReturnAllToSenders]', () => {
     })
     it('should get unspent and call the filter function', (done) => {
       ReturnAllToSenders.runtime = {
-        navClient: {
+        softClient: {
           listUnspent: () => { return Promise.resolve([1, 2, 3]) },
         },
       }
@@ -225,7 +225,7 @@ describe('[ReturnAllToSenders]', () => {
     })
     it('should fail because the filtered wasnt an array', (done) => {
       ReturnAllToSenders.runtime = {
-        navClient: {
+        softClient: {
           listUnspent: () => { return Promise.reject({ code: -17 }) },
         },
         transactionsToReturn: 1234,
@@ -244,7 +244,7 @@ describe('[ReturnAllToSenders]', () => {
     })
     it('should fail because ther were no filtered', (done) => {
       ReturnAllToSenders.runtime = {
-        navClient: {
+        softClient: {
           listUnspent: () => { return Promise.reject({ code: -17 }) },
         },
         transactionsToReturn: [],
@@ -263,7 +263,7 @@ describe('[ReturnAllToSenders]', () => {
     })
     it('should succeed and call the send function', (done) => {
       ReturnAllToSenders.runtime = {
-        navClient: {
+        softClient: {
           listUnspent: () => { return Promise.reject({ code: -17 }) },
         },
         transactionsToReturn: [1, 2, 3],
@@ -273,7 +273,7 @@ describe('[ReturnAllToSenders]', () => {
         send: (options, callback) => {
           expect(callback).toBe(ReturnAllToSenders.returnedToSender)
           expect(options.transaction).toEqual(1)
-          expect(options.client).toBe(ReturnAllToSenders.runtime.navClient)
+          expect(options.client).toBe(ReturnAllToSenders.runtime.softClient)
           sinon.assert.notCalled(mockLogger.writeLog)
           done()
         },

@@ -23,8 +23,8 @@
   },
   "maxAddresses": 1000,
   "maxHolding": 200,
-  "minNavTransactions": 3,
-  "maxNavTransactions": 8,
+  "minSoftTransactions": 3,
+  "maxSoftTransactions": 8,
   "txFee": 0.0001,
   "maxEncryptionAttempts": 10,
   "encryptionStrength": {

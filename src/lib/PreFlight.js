@@ -2,47 +2,47 @@ const lodash = require('lodash')
 
 const privateSettings = require('../settings/private.settings.json')
 let Logger = require('./Logger.js') // eslint-disable-line
-let NavCoin = require('./NavCoin.js') // eslint-disable-line
+let SoftCoin = require('./SoftCoin.js') // eslint-disable-line
 
 const PreFlight = {}
 
 PreFlight.run = (options, callback) => {
-  const required = ['navClient', 'subClient', 'settings']
+  const required = ['softClient', 'subClient', 'settings']
   if (lodash.intersection(Object.keys(options), required).length !== required.length) {
     Logger.writeLog('PRE_001', 'invalid options', { options, required })
-    callback(false, { message: 'invalid options provided to Preflight.checkNavBlocks' })
+    callback(false, { message: 'invalid options provided to Preflight.checkSoftBlocks' })
     return
   }
 
   PreFlight.runtime = {
     callback,
-    navClient: options.navClient,
+    softClient: options.softClient,
     subClient: options.subClient,
     settings: options.settings,
   }
 
-  NavCoin.checkBlockHeight({
-    client: PreFlight.runtime.navClient,
+  SoftCoin.checkBlockHeight({
+    client: PreFlight.runtime.softClient,
     blockThreshold: privateSettings.blockThreshold.processing,
-  }, PreFlight.navBlocksChecked)
+  }, PreFlight.softBlocksChecked)
 }
 
-PreFlight.navBlocksChecked = (status, data) => {
+PreFlight.softBlocksChecked = (status, data) => {
   if (!status || !data) {
-    Logger.writeLog('PRE_002', 'navClient block check failed', { status, data })
-    PreFlight.runtime.callback(false, { message: 'navClient block check failed' })
+    Logger.writeLog('PRE_002', 'softClient block check failed', { status, data })
+    PreFlight.runtime.callback(false, { message: 'softClient block check failed' })
     return
   }
-  PreFlight.runtime.navBalance = data.balance
-  PreFlight.runtime.navClient.setTxFee(parseFloat(privateSettings.txFee)).then(() => {
-    NavCoin.checkBlockHeight({
+  PreFlight.runtime.softBalance = data.balance
+  PreFlight.runtime.softClient.setTxFee(parseFloat(privateSettings.txFee)).then(() => {
+    SoftCoin.checkBlockHeight({
       client: PreFlight.runtime.subClient,
       blockThreshold: privateSettings.blockThreshold.processing,
     }, PreFlight.subBlocksChecked)
   })
   .catch((err) => {
-    Logger.writeLog('PRE_003', 'failed to set NAV tx fee', { err })
-    PreFlight.runtime.callback(false, { message: 'failed to set NAV tx fee' })
+    Logger.writeLog('PRE_003', 'failed to set SOFT tx fee', { err })
+    PreFlight.runtime.callback(false, { message: 'failed to set SOFT tx fee' })
     return
   })
 }
@@ -54,20 +54,20 @@ PreFlight.subBlocksChecked = (status, data) => {
     return
   }
   PreFlight.runtime.subBalance = data.balance
-  NavCoin.unlockWallet({
+  SoftCoin.unlockWallet({
     settings: PreFlight.runtime.settings,
-    client: PreFlight.runtime.navClient,
-    type: 'navCoin',
-  }, PreFlight.navClientUnlocked)
+    client: PreFlight.runtime.softClient,
+    type: 'softCoin',
+  }, PreFlight.softClientUnlocked)
 }
 
-PreFlight.navClientUnlocked = (status, data) => {
+PreFlight.softClientUnlocked = (status, data) => {
   if (!status) {
-    Logger.writeLog('PRE_005', 'navClient failed to unlock', { status, data })
-    PreFlight.runtime.callback(false, { message: 'navClient failed to unlock' })
+    Logger.writeLog('PRE_005', 'softClient failed to unlock', { status, data })
+    PreFlight.runtime.callback(false, { message: 'softClient failed to unlock' })
     return
   }
-  NavCoin.unlockWallet({
+  SoftCoin.unlockWallet({
     settings: PreFlight.runtime.settings,
     client: PreFlight.runtime.subClient,
     type: 'subChain',
@@ -82,7 +82,7 @@ PreFlight.subClientUnlocked = (status, data) => {
   }
   PreFlight.runtime.subClient.setTxFee(parseFloat(privateSettings.subChainTxFee)).then(() => {
     PreFlight.runtime.callback(true, {
-      navBalance: PreFlight.runtime.navBalance,
+      softBalance: PreFlight.runtime.softBalance,
       subBalance: PreFlight.runtime.subBalance,
     })
   })

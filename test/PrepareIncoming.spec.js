@@ -28,8 +28,8 @@ describe('[PrepareIncoming]', () => {
     it('should set the runtime variables and call getUnspent', (done) => {
       PrepareIncoming.getUnspent = () => {
         expect(PrepareIncoming.runtime.callback).toBe(callback)
-        expect(PrepareIncoming.runtime.navClient).toBe(mockClient)
-        expect(PrepareIncoming.runtime.outgoingNavBalance).toBe(50000)
+        expect(PrepareIncoming.runtime.softClient).toBe(mockClient)
+        expect(PrepareIncoming.runtime.outgoingSoftBalance).toBe(50000)
         expect(PrepareIncoming.runtime.subBalance).toBe(1000)
         done()
       }
@@ -41,8 +41,8 @@ describe('[PrepareIncoming]', () => {
       }
 
       PrepareIncoming.run({
-        navClient: mockClient,
-        outgoingNavBalance: 50000,
+        softClient: mockClient,
+        outgoingSoftBalance: 50000,
         subBalance: 1000,
         settings: { test: true },
       }, callback)
@@ -67,7 +67,7 @@ describe('[PrepareIncoming]', () => {
       }
       PrepareIncoming.__set__('Logger', mockLogger)
       PrepareIncoming.runtime = {
-        navClient: mockClient,
+        softClient: mockClient,
         callback,
       }
       PrepareIncoming.getUnspent()
@@ -87,13 +87,13 @@ describe('[PrepareIncoming]', () => {
       }
       PrepareIncoming.__set__('Logger', mockLogger)
       PrepareIncoming.runtime = {
-        navClient: mockClient,
+        softClient: mockClient,
         callback,
       }
       PrepareIncoming.getUnspent()
     })
     it('should find unspent and call the filter function', (done) => {
-      const mockNavCoin = {
+      const mockSoftCoin = {
         filterUnspent: (options, parsedCallback) => {
           expect(parsedCallback).toBe(PrepareIncoming.unspentFiltered)
           expect(options.unspent).toBe(unspent)
@@ -112,9 +112,9 @@ describe('[PrepareIncoming]', () => {
         writeLog: sinon.spy(),
       }
       PrepareIncoming.__set__('Logger', mockLogger)
-      PrepareIncoming.__set__('NavCoin', mockNavCoin)
+      PrepareIncoming.__set__('SoftCoin', mockSoftCoin)
       PrepareIncoming.runtime = {
-        navClient: mockClient,
+        softClient: mockClient,
         callback,
       }
       PrepareIncoming.getUnspent()
@@ -139,7 +139,7 @@ describe('[PrepareIncoming]', () => {
       }
       PrepareIncoming.__set__('Logger', mockLogger)
       PrepareIncoming.runtime = {
-        navClient: mockClient,
+        softClient: mockClient,
         callback,
       }
       PrepareIncoming.unspentFiltered(false)
@@ -159,7 +159,7 @@ describe('[PrepareIncoming]', () => {
       }
       PrepareIncoming.__set__('Logger', mockLogger)
       PrepareIncoming.runtime = {
-        navClient: mockClient,
+        softClient: mockClient,
         callback,
       }
       PrepareIncoming.unspentFiltered(true, {
@@ -181,7 +181,7 @@ describe('[PrepareIncoming]', () => {
       }
       PrepareIncoming.__set__('Logger', mockLogger)
       PrepareIncoming.runtime = {
-        navClient: mockClient,
+        softClient: mockClient,
         callback,
       }
       PrepareIncoming.unspentFiltered(true, {
@@ -206,9 +206,9 @@ describe('[PrepareIncoming]', () => {
       PrepareIncoming.__set__('Logger', mockLogger)
       PrepareIncoming.__set__('GroupPartials', GroupPartials)
       PrepareIncoming.runtime = {
-        navClient: mockClient,
+        softClient: mockClient,
         subBalance: 1000,
-        outgoingNavBalance: 50000,
+        outgoingSoftBalance: 50000,
       }
       const currentPending = [1, 2, 3, 4]
       PrepareIncoming.unspentFiltered(true, {
@@ -304,9 +304,9 @@ describe('[PrepareIncoming]', () => {
       }
       PrepareIncoming.runtime = {
         currentPending: 1234,
-        navClient: 3456,
+        softClient: 3456,
         subBalance: 1000,
-        outgoingNavBalance: 10000,
+        outgoingSoftBalance: 10000,
       }
       const mockLogger = {
         writeLog: sinon.spy(),

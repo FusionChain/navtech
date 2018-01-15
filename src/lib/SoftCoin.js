@@ -7,13 +7,13 @@ const Logger = require('./Logger.js')
 
 let globalSettings = config.get('GLOBAL') // eslint-disable-line
 
-const NavCoin = {}
+const SoftCoin = {}
 
-NavCoin.unlockWallet = (options, callback) => {
+SoftCoin.unlockWallet = (options, callback) => {
   const required = ['settings', 'client', 'type']
   if (lodash.intersection(Object.keys(options), required).length !== required.length) {
-    Logger.writeLog('NAV_001', 'invalid options', { options, required })
-    callback(false, { message: 'invalid options provided to NavCoin.unlockWallet' })
+    Logger.writeLog('SOFT_001', 'invalid options', { options, required })
+    callback(false, { message: 'invalid options provided to SoftCoin.unlockWallet' })
     return
   }
 
@@ -32,34 +32,34 @@ NavCoin.unlockWallet = (options, callback) => {
         break
       default:
         callback(false, { message: 'failed to unlock' })
-        Logger.writeLog('NAV_002', 'failed to unlock ' + options.type + ' wallet', { error: err })
+        Logger.writeLog('SOFT_002', 'failed to unlock ' + options.type + ' wallet', { error: err })
         return
     }
   })
 }
 
-NavCoin.lockWallet = (options, callback) => {
+SoftCoin.lockWallet = (options, callback) => {
   const required = ['type', 'client']
   if (lodash.intersection(Object.keys(options), required).length !== required.length) {
-    Logger.writeLog('NAV_003', 'invalid options', { options, required })
-    callback(false, { message: 'invalid options provided to NavCoin.lockWallet' })
+    Logger.writeLog('SOFT_003', 'invalid options', { options, required })
+    callback(false, { message: 'invalid options provided to SoftCoin.lockWallet' })
     return
   }
   options.client.walletLock().then(() => {
-    Logger.writeLog('NAV_004', 'locked the ' + options.type + ' wallet', options)
-    NavCoin.unlockWallet(options, callback)
+    Logger.writeLog('SOFT_004', 'locked the ' + options.type + ' wallet', options)
+    SoftCoin.unlockWallet(options, callback)
   }).catch((err) => {
     callback(false, { message: 'failed to lock' })
-    Logger.writeLog('NAV_005', 'failed to lock ' + options.type + ' wallet', { error: err })
+    Logger.writeLog('SOFT_005', 'failed to lock ' + options.type + ' wallet', { error: err })
     return
   })
 }
 
-NavCoin.filterUnspent = (options, callback) => {
+SoftCoin.filterUnspent = (options, callback) => {
   const required = ['unspent', 'client', 'accountName']
   if (lodash.intersection(Object.keys(options), required).length !== required.length) {
-    Logger.writeLog('NAV_006', 'invalid options', { options, required })
-    callback(false, { message: 'invalid options provided to NavCoin.filterUnspent' })
+    Logger.writeLog('SOFT_006', 'invalid options', { options, required })
+    callback(false, { message: 'invalid options provided to SoftCoin.filterUnspent' })
     return
   }
   try {
@@ -79,48 +79,48 @@ NavCoin.filterUnspent = (options, callback) => {
       callback(true)
       return
     }).catch((err) => {
-      Logger.writeLog('NAV_007', 'failed to get address by account', { error: err, options })
+      Logger.writeLog('SOFT_007', 'failed to get address by account', { error: err, options })
       callback(false)
       return
     })
   } catch (err) {
-    Logger.writeLog('NAV_008', 'failed to filter', { error: err, options })
+    Logger.writeLog('SOFT_008', 'failed to filter', { error: err, options })
   }
 }
 
-NavCoin.checkBlockHeight = (options, callback) => {
+SoftCoin.checkBlockHeight = (options, callback) => {
   const required = ['client', 'blockThreshold']
   if (lodash.intersection(Object.keys(options), required).length !== required.length) {
-    Logger.writeLog('NAV_009', 'invalid options', { options, required })
-    callback(false, { message: 'invalid options provided to NavCoin.checkBlockHeight' })
+    Logger.writeLog('SOFT_009', 'invalid options', { options, required })
+    callback(false, { message: 'invalid options provided to SoftCoin.checkBlockHeight' })
     return
   }
   options.client.getInfo().then((walletInfo) => {
     options.client.getBlockCount().then((blockCount) => {
       if (parseInt(blockCount, 10) - options.blockThreshold > parseInt(walletInfo.blocks, 10)) {
-        Logger.writeLog('NAV_010', 'client is not synced with the latest blocks', { walletInfo, blockCount })
+        Logger.writeLog('SOFT_010', 'client is not synced with the latest blocks', { walletInfo, blockCount })
         callback(false, { message: 'client is not synced with the latest blocks' })
         return
       }
       callback(true, { balance: walletInfo.balance })
       return
     }).catch((err) => {
-      Logger.writeLog('NAV_011', 'failed to get block count', { error: err, options })
+      Logger.writeLog('SOFT_011', 'failed to get block count', { error: err, options })
       callback(false, { message: 'failed to get block count' })
       return
     })
   }).catch((err) => {
-    Logger.writeLog('NAV_012', 'failed to get info', { error: err, options })
+    Logger.writeLog('SOFT_012', 'failed to get info', { error: err, options })
     callback(false, { message: 'failed to get info' })
     return
   })
 }
 
-NavCoin.validateAddresses = (options, callback) => {
+SoftCoin.validateAddresses = (options, callback) => {
   const required = ['client', 'addresses']
   if (lodash.intersection(Object.keys(options), required).length !== required.length) {
-    Logger.writeLog('NAV_013', 'invalid options', { options, required })
-    callback(false, { message: 'invalid options provided to NavCoin.validateAddresses' })
+    Logger.writeLog('SOFT_013', 'invalid options', { options, required })
+    callback(false, { message: 'invalid options provided to SoftCoin.validateAddresses' })
     return
   }
   if (options.addresses.length === 0) {
@@ -129,20 +129,20 @@ NavCoin.validateAddresses = (options, callback) => {
   }
   options.client.validateAddress(options.addresses[0]).then((addressInfo) => {
     if (addressInfo.isvalid !== true) {
-      Logger.writeLog('NAV_014', 'provided address is invalid', { address: options.addresses[0] })
+      Logger.writeLog('SOFT_014', 'provided address is invalid', { address: options.addresses[0] })
       callback(false, { message: 'provided address is invalid' })
       return
     }
-    NavCoin.validateAddresses({
+    SoftCoin.validateAddresses({
       addresses: options.addresses.slice(1),
       client: options.client,
     }, callback)
     return
   }).catch((err) => {
-    Logger.writeLog('NAV_015', 'failed to validate address', { error: err, options })
+    Logger.writeLog('SOFT_015', 'failed to validate address', { error: err, options })
     callback(false, { message: 'failed to validate address' })
     return
   })
 }
 
-module.exports = NavCoin
+module.exports = SoftCoin

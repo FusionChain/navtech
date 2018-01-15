@@ -26,7 +26,7 @@ describe('[RefillOutgoing]', () => {
     })
     it('should get the right params and call getUnspent', (done) => {
       const callback = () => {}
-      const navClient = {}
+      const softClient = {}
       RefillOutgoing.getUnspent = () => {
         expect(RefillOutgoing.runtime.callback).toBe(callback)
         sinon.assert.notCalled(mockLogger.writeLog)
@@ -36,7 +36,7 @@ describe('[RefillOutgoing]', () => {
         writeLog: sinon.spy(),
       }
       RefillOutgoing.__set__('Logger', mockLogger)
-      RefillOutgoing.run({ navClient }, callback)
+      RefillOutgoing.run({ softClient }, callback)
     })
   })
   describe('(getUnspent)', () => {
@@ -48,7 +48,7 @@ describe('[RefillOutgoing]', () => {
         listUnspent: () => { return Promise.reject({ code: -4 }) },
       }
       RefillOutgoing.runtime = {
-        navClient: mockClient,
+        softClient: mockClient,
         callback: (success, data) => {
           expect(success).toBe(false)
           expect(data.message).toBeA('string')
@@ -68,7 +68,7 @@ describe('[RefillOutgoing]', () => {
         listUnspent: () => { return Promise.resolve([]) },
       }
       RefillOutgoing.runtime = {
-        navClient: mockClient,
+        softClient: mockClient,
         callback: (success, data) => {
           expect(success).toBe(true)
           expect(data.message).toBeA('string')
@@ -88,10 +88,10 @@ describe('[RefillOutgoing]', () => {
         listUnspent: () => { return Promise.resolve([1, 2, 3]) },
       }
       RefillOutgoing.runtime = {
-        navClient: mockClient,
+        softClient: mockClient,
         callback: () => {},
       }
-      const NavCoin = {
+      const SoftCoin = {
         filterUnspent: (options, callback) => {
           expect(options.client).toBe(mockClient)
           expect(options.unspent).toEqual([1, 2, 3])
@@ -104,7 +104,7 @@ describe('[RefillOutgoing]', () => {
         writeLog: sinon.spy(),
       }
       RefillOutgoing.__set__('Logger', mockLogger)
-      RefillOutgoing.__set__('NavCoin', NavCoin)
+      RefillOutgoing.__set__('SoftCoin', SoftCoin)
       RefillOutgoing.getUnspent()
     })
   })
@@ -220,14 +220,14 @@ describe('[RefillOutgoing]', () => {
       const hld1 = { confirmations: 5, amount: 100, txid: 'XYZ' }
       const hld2 = { confirmations: 10, amount: 500, txid: 'ABC' }
       RefillOutgoing.runtime = {
-        navClient: {},
+        softClient: {},
         currentHolding: [hld1, hld2],
       }
       const EncryptedData = {
         getEncrypted: (options, callback) => {
           expect(callback).toEqual(RefillOutgoing.holdingDecrypted)
           expect(options.transaction).toBe(hld1)
-          expect(options.client).toBe(RefillOutgoing.runtime.navClient)
+          expect(options.client).toBe(RefillOutgoing.runtime.softClient)
           sinon.assert.notCalled(mockLogger.writeLog)
           done()
         },
@@ -326,7 +326,7 @@ describe('[RefillOutgoing]', () => {
         incoming: (options, callback) => {
           expect(callback).toEqual(RefillOutgoing.checkRandomTransactions)
           expect(options.totalToSend).toBe(500)
-          expect(options.addresses.length).toBeGreaterThanOrEqualTo(privateSettings.minNavTransactions)
+          expect(options.addresses.length).toBeGreaterThanOrEqualTo(privateSettings.minSoftTransactions)
           expect(options.addresses.length).toBeLessThanOrEqualTo(decrypted.length)
           sinon.assert.notCalled(mockLogger.writeLog)
           if (i === 100) done()

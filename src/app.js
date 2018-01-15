@@ -12,7 +12,7 @@ const md5File = require('md5-file')
 const IncomingServer = require('./incoming')
 const OutgoingServer = require('./outgoing')
 const SettingsValidator = require('./lib/SettingsValidator.js')
-const NavCoin = require('./lib/NavCoin.js')
+const SoftCoin = require('./lib/SoftCoin.js')
 const EncryptedData = require('./lib/EncryptedData.js')
 const RandomizeTransactions = require('./lib/RandomizeTransactions.js')
 const EncryptionKeys = require('./lib/EncryptionKeys.js')
@@ -35,7 +35,7 @@ Logger.writeLog('SYS_001', 'Server Starting', {
 
 const app = express()
 
-const NavtechApi = {}
+const SoftnodeApi = {}
 
 if (settings) {
   SettingsValidator.validateSettings({ settings }, canInit)
@@ -52,14 +52,14 @@ function canInit(settingsValid) {
 }
 
 function initServer() {
-  NavtechApi.navClient = new Client({
-    username: settings.navCoin.user,
-    password: settings.navCoin.pass,
-    port: settings.navCoin.port,
-    host: settings.navCoin.host,
+  SoftnodeApi.softClient = new Client({
+    username: settings.softCoin.user,
+    password: settings.softCoin.pass,
+    port: settings.softCoin.port,
+    host: settings.softCoin.host,
   })
 
-  NavtechApi.subClient = new Client({
+  SoftnodeApi.subClient = new Client({
     username: settings.subChain.user,
     password: settings.subChain.pass,
     port: settings.subChain.port,
@@ -120,7 +120,7 @@ const setupServer = () => {
 
 const apiInit = () => {
   app.get('/', (req, res) => {
-    md5File('dist/navtech.js', (err, hash) => {
+    md5File('dist/softnode.js', (err, hash) => {
       if (err) {
         res.send(JSON.stringify({
           status: 200,
@@ -142,12 +142,12 @@ const apiInit = () => {
   })
 
   app.post('/api/test-decryption', (req, res) => {
-    NavtechApi.runtime = {}
-    NavtechApi.runtime.req = req
-    NavtechApi.runtime.res = res
+    SoftnodeApi.runtime = {}
+    SoftnodeApi.runtime.req = req
+    SoftnodeApi.runtime.res = res
     if (!req.body || !req.body.encrypted_data) {
       Logger.writeLog('APP_004', 'failed to receive params', { body: req.body })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_004',
@@ -156,14 +156,14 @@ const apiInit = () => {
       return
     }
     EncryptedData.decryptData({
-      encryptedData: NavtechApi.runtime.req.body.encrypted_data,
-    }, NavtechApi.checkDecrypted)
+      encryptedData: SoftnodeApi.runtime.req.body.encrypted_data,
+    }, SoftnodeApi.checkDecrypted)
   })
 
-  NavtechApi.checkDecrypted = (success, data) => {
+  SoftnodeApi.checkDecrypted = (success, data) => {
     if (!success || !data || !data.decrypted) {
-      Logger.writeLog('APP_005', 'unable to derypt the data', { success, data, body: NavtechApi.runtime.req.body })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      Logger.writeLog('APP_005', 'unable to derypt the data', { success, data, body: SoftnodeApi.runtime.req.body })
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_005',
@@ -171,73 +171,73 @@ const apiInit = () => {
       }))
       return
     }
-    NavtechApi.runtime.res.send(JSON.stringify({
+    SoftnodeApi.runtime.res.send(JSON.stringify({
       status: 200,
       type: 'SUCCESS',
       message: 'decryption test successful',
     }))
   }
 
-  // ----------- GET NAV ADDRESSES ---------------------------------------------------------------------------------------------------------
+  // ----------- GET SOFT ADDRESSES ---------------------------------------------------------------------------------------------------------
 
   app.post('/api/get-addresses', (req, res) => {
-    NavtechApi.runtime = {}
-    NavtechApi.runtime.req = req
-    NavtechApi.runtime.res = res
+    SoftnodeApi.runtime = {}
+    SoftnodeApi.runtime.req = req
+    SoftnodeApi.runtime.res = res
 
-    if (!NavtechApi.runtime.req.body ||
-      !NavtechApi.runtime.req.body.num_addresses ||
-      !NavtechApi.runtime.req.body.type ||
-      !NavtechApi.runtime.req.body.account) {
+    if (!SoftnodeApi.runtime.req.body ||
+      !SoftnodeApi.runtime.req.body.num_addresses ||
+      !SoftnodeApi.runtime.req.body.type ||
+      !SoftnodeApi.runtime.req.body.account) {
       Logger.writeLog('APP_006', 'failed to receive params', { body: req.body })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_006',
         message: 'ERROR: invalid params',
-        body: NavtechApi.runtime.req.body,
+        body: SoftnodeApi.runtime.req.body,
       }))
       return
     }
 
-    NavtechApi.runtime.accountToUse = privateSettings.account[NavtechApi.runtime.req.body.account]
+    SoftnodeApi.runtime.accountToUse = privateSettings.account[SoftnodeApi.runtime.req.body.account]
 
-    if (!NavtechApi.runtime.accountToUse) {
-      NavtechApi.runtime.res.send(JSON.stringify({
+    if (!SoftnodeApi.runtime.accountToUse) {
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_006A',
         message: 'ERROR: invalid account',
-        body: NavtechApi.runtime.req.body,
+        body: SoftnodeApi.runtime.req.body,
       }))
     }
 
     if (globalSettings.serverType === 'OUTGOING') {
-      NavtechApi.checkIpAddress({ allowedIps: settings.remote }, NavtechApi.getAddresses)
+      SoftnodeApi.checkIpAddress({ allowedIps: settings.remote }, SoftnodeApi.getAddresses)
       return
     }
-    NavtechApi.getAddresses()
+    SoftnodeApi.getAddresses()
   })
 
-  NavtechApi.getAddresses = () => {
-    NavtechApi.runtime.numAddresses = parseInt(NavtechApi.runtime.req.body.num_addresses, 10)
-    if (NavtechApi.runtime.req.body.type === 'SUBCHAIN') {
-      NavtechApi.runtime.clientToUse = NavtechApi.subClient
+  SoftnodeApi.getAddresses = () => {
+    SoftnodeApi.runtime.numAddresses = parseInt(SoftnodeApi.runtime.req.body.num_addresses, 10)
+    if (SoftnodeApi.runtime.req.body.type === 'SUBCHAIN') {
+      SoftnodeApi.runtime.clientToUse = SoftnodeApi.subClient
     } else {
-      NavtechApi.runtime.clientToUse = NavtechApi.navClient
+      SoftnodeApi.runtime.clientToUse = SoftnodeApi.softClient
     }
 
     RandomizeTransactions.getRandomAccountAddresses({
-      client: NavtechApi.runtime.clientToUse,
-      accountName: NavtechApi.runtime.accountToUse,
-      numAddresses: NavtechApi.runtime.numAddresses,
-    }, NavtechApi.returnAddresses)
+      client: SoftnodeApi.runtime.clientToUse,
+      accountName: SoftnodeApi.runtime.accountToUse,
+      numAddresses: SoftnodeApi.runtime.numAddresses,
+    }, SoftnodeApi.returnAddresses)
   }
 
-  NavtechApi.returnAddresses = (success, data) => {
+  SoftnodeApi.returnAddresses = (success, data) => {
     if (!success || !data || !data.pickedAddresses) {
       Logger.writeLog('APP_008', 'failed to pick random addresses', { success, data })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_008',
@@ -246,7 +246,7 @@ const apiInit = () => {
       return
     }
     // Logger.writeLog('APP_TEST_001', 'success get-addresses', { data })
-    NavtechApi.runtime.res.send(JSON.stringify({
+    SoftnodeApi.runtime.res.send(JSON.stringify({
       status: 200,
       type: 'SUCCESS',
       data: {
@@ -255,37 +255,37 @@ const apiInit = () => {
     }))
   }
 
-  // ----------- GET NAV BALANCE -----------------------------------------------------------------------------------------------------------
+  // ----------- GET SOFT BALANCE -----------------------------------------------------------------------------------------------------------
 
-  app.get('/api/get-nav-balance', (req, res) => {
-    NavtechApi.runtime = {}
-    NavtechApi.runtime.req = req
-    NavtechApi.runtime.res = res
+  app.get('/api/get-soft-balance', (req, res) => {
+    SoftnodeApi.runtime = {}
+    SoftnodeApi.runtime.req = req
+    SoftnodeApi.runtime.res = res
 
-    NavtechApi.navClient.getBalance().then((navBalance) => {
-      NavtechApi.runtime.res.send(JSON.stringify({
+    SoftnodeApi.softClient.getBalance().then((softBalance) => {
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'SUCCESS',
         data: {
-          nav_balance: navBalance,
+          soft_balance: softBalance,
         },
       }))
     })
     .catch((err) => {
-      Logger.writeLog('APP_009', 'failed to get the NAV balance', { error: err })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      Logger.writeLog('APP_009', 'failed to get the SOFT balance', { error: err })
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_009',
-        message: 'failed to get the NAV balance',
+        message: 'failed to get the SOFT balance',
       }))
     })
   })
 
   // ------------------ CHECK AUTHORIZED IP -------------------------------------------
 
-  NavtechApi.checkIpAddress = (options, callback) => {
-    const remoteIpAddress = NavtechApi.runtime.req.connection.remoteAddress || NavtechApi.runtime.req.socket.remoteAddress
+  SoftnodeApi.checkIpAddress = (options, callback) => {
+    const remoteIpAddress = SoftnodeApi.runtime.req.connection.remoteAddress || SoftnodeApi.runtime.req.socket.remoteAddress
     let authorized = false
     for (let i = 0; i < options.allowedIps.length; i++) {
       if (remoteIpAddress === options.allowedIps[i].ipAddress || remoteIpAddress === '::ffff:' + options.allowedIps[i].ipAddress) {
@@ -297,7 +297,7 @@ const apiInit = () => {
       callback()
     } else {
       Logger.writeLog('APP_025', 'unauthorized access attempt', { remoteIpAddress, remote: options.allowedIps })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_025',
@@ -309,14 +309,14 @@ const apiInit = () => {
   // ------------------ CHECK NODE ---------------------------------------------------------------------------------------------------------
 
   app.post('/api/check-node', (req, res) => {
-    NavtechApi.runtime = {}
-    NavtechApi.runtime.req = req
-    NavtechApi.runtime.res = res
+    SoftnodeApi.runtime = {}
+    SoftnodeApi.runtime.req = req
+    SoftnodeApi.runtime.res = res
 
 
-    if (!NavtechApi.runtime.req.body || !NavtechApi.runtime.req.body.num_addresses) {
+    if (!SoftnodeApi.runtime.req.body || !SoftnodeApi.runtime.req.body.num_addresses) {
       Logger.writeLog('APP_026', 'failed to receive params', { body: req.body })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_026',
@@ -328,7 +328,7 @@ const apiInit = () => {
     if (globalSettings.serverType === 'INCOMING' && IncomingServer.paused
        || globalSettings.serverType === 'OUTGOING' && OutgoingServer.paused) {
       Logger.writeLog('APP_026A', 'this server is paused for manual recovery', { body: req.body })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_026A',
@@ -337,49 +337,49 @@ const apiInit = () => {
       return
     }
 
-    NavtechApi.runtime.numAddresses = parseInt(NavtechApi.runtime.req.body.num_addresses, 10)
+    SoftnodeApi.runtime.numAddresses = parseInt(SoftnodeApi.runtime.req.body.num_addresses, 10)
 
     if (globalSettings.serverType === 'INCOMING') {
       if (globalSettings.maintenance) {
-        NavtechApi.checkIpAddress({ allowedIps: globalSettings.allowedIps }, NavtechApi.checkNavBlocks)
+        SoftnodeApi.checkIpAddress({ allowedIps: globalSettings.allowedIps }, SoftnodeApi.checkSoftBlocks)
         return
       }
-      NavtechApi.checkNavBlocks()
+      SoftnodeApi.checkSoftBlocks()
       return
     }
-    NavtechApi.checkIpAddress({ allowedIps: settings.remote }, NavtechApi.checkNavBlocks)
+    SoftnodeApi.checkIpAddress({ allowedIps: settings.remote }, SoftnodeApi.checkSoftBlocks)
     return
   })
 
-  NavtechApi.checkNavBlocks = () => {
-    NavCoin.checkBlockHeight({
-      client: NavtechApi.navClient,
+  SoftnodeApi.checkSoftBlocks = () => {
+    SoftCoin.checkBlockHeight({
+      client: SoftnodeApi.softClient,
       blockThreshold: privateSettings.blockThreshold.checking },
-    NavtechApi.navBlocksChecked)
+    SoftnodeApi.softBlocksChecked)
   }
 
-  NavtechApi.navBlocksChecked = (success, data) => {
+  SoftnodeApi.softBlocksChecked = (success, data) => {
     if (!success || !data) {
-      Logger.writeLog('APP_027', 'navClient block check failed', { success, data })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      Logger.writeLog('APP_027', 'softClient block check failed', { success, data })
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_027',
-        message: 'navClient block check failed',
+        message: 'softClient block check failed',
       }))
       return
     }
-    NavtechApi.runtime.navBalance = data.balance
-    NavCoin.checkBlockHeight({
-      client: NavtechApi.subClient,
+    SoftnodeApi.runtime.softBalance = data.balance
+    SoftCoin.checkBlockHeight({
+      client: SoftnodeApi.subClient,
       blockThreshold: privateSettings.blockThreshold.checking,
-    }, NavtechApi.subBlocksChecked)
+    }, SoftnodeApi.subBlocksChecked)
   }
 
-  NavtechApi.subBlocksChecked = (success, data) => {
+  SoftnodeApi.subBlocksChecked = (success, data) => {
     if (!success || !data) {
       Logger.writeLog('APP_028', 'subClient block check failed', { success, data })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_028',
@@ -387,28 +387,28 @@ const apiInit = () => {
       }))
       return
     }
-    NavtechApi.runtime.subBalance = data.balance
-    NavCoin.unlockWallet({ settings, client: NavtechApi.navClient, type: 'navCoin' }, NavtechApi.unlockSubchain)
+    SoftnodeApi.runtime.subBalance = data.balance
+    SoftCoin.unlockWallet({ settings, client: SoftnodeApi.softClient, type: 'softCoin' }, SoftnodeApi.unlockSubchain)
   }
 
-  NavtechApi.unlockSubchain = (success, data) => {
+  SoftnodeApi.unlockSubchain = (success, data) => {
     if (!success) {
-      Logger.writeLog('APP_029', 'navClient failed to unlock', { success, data })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      Logger.writeLog('APP_029', 'softClient failed to unlock', { success, data })
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_029',
-        message: 'navClient failed to unlock',
+        message: 'softClient failed to unlock',
       }))
       return
     }
-    NavCoin.unlockWallet({ settings, client: NavtechApi.subClient, type: 'subChain' }, NavtechApi.getUnspent)
+    SoftCoin.unlockWallet({ settings, client: SoftnodeApi.subClient, type: 'subChain' }, SoftnodeApi.getUnspent)
   }
 
-  NavtechApi.getUnspent = (success, data) => {
+  SoftnodeApi.getUnspent = (success, data) => {
     if (!success) {
       Logger.writeLog('APP_030', 'subClient failed to unlock', { success, data })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_030',
@@ -418,37 +418,37 @@ const apiInit = () => {
     }
 
     if (globalSettings.serverType === 'OUTGOING') {
-      EncryptionKeys.getEncryptionKeys({}, NavtechApi.testKeyPair)
+      EncryptionKeys.getEncryptionKeys({}, SoftnodeApi.testKeyPair)
       return
     }
 
-    NavtechApi.navClient.listUnspent().then((unspent) => {
+    SoftnodeApi.softClient.listUnspent().then((unspent) => {
       if (unspent.length < 1) {
-        EncryptionKeys.getEncryptionKeys({}, NavtechApi.testKeyPair)
+        EncryptionKeys.getEncryptionKeys({}, SoftnodeApi.testKeyPair)
         return
       }
-      NavCoin.filterUnspent({
+      SoftCoin.filterUnspent({
         unspent,
-        client: NavtechApi.navClient,
+        client: SoftnodeApi.softClient,
         accountName: privateSettings.account[globalSettings.serverType],
       },
-      NavtechApi.processFiltered)
+      SoftnodeApi.processFiltered)
     }).catch((err) => {
-      Logger.writeLog('APP_030A', 'failed to get unspent from the navClient', { error: err })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      Logger.writeLog('APP_030A', 'failed to get unspent from the softClient', { error: err })
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_030A',
-        message: 'failed to get unspent from the navClient',
+        message: 'failed to get unspent from the softClient',
       }))
       return
     })
   }
 
-  NavtechApi.processFiltered = (success, data) => {
+  SoftnodeApi.processFiltered = (success, data) => {
     if (!success) {
       Logger.writeLog('APP_030C', 'failed to filter the unspent', { success, data })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_030C',
@@ -467,7 +467,7 @@ const apiInit = () => {
       }
       if (highestConf > privateSettings.maxQueue) {
         Logger.writeLog('APP_030B', 'the queue is too long', { highestConf }, true)
-        NavtechApi.runtime.res.send(JSON.stringify({
+        SoftnodeApi.runtime.res.send(JSON.stringify({
           status: 200,
           type: 'FAIL',
           code: 'APP_030B',
@@ -476,14 +476,14 @@ const apiInit = () => {
         return
       }
     }
-    EncryptionKeys.getEncryptionKeys({}, NavtechApi.testKeyPair)
+    EncryptionKeys.getEncryptionKeys({}, SoftnodeApi.testKeyPair)
   }
 
 
-  NavtechApi.testKeyPair = (success, data) => {
+  SoftnodeApi.testKeyPair = (success, data) => {
     if (!success || !data || !data.privKeyFile || !data.pubKeyFile) {
       Logger.writeLog('APP_031', 'failed to get the current keys', { success, data })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_031',
@@ -495,13 +495,13 @@ const apiInit = () => {
     EncryptionKeys.testKeyPair({
       pubKeyFile: data.pubKeyFile,
       privKeyFile: data.privKeyFile,
-    }, NavtechApi.testedKeypair)
+    }, SoftnodeApi.testedKeypair)
   }
 
-  NavtechApi.testedKeypair = (success, data) => {
+  SoftnodeApi.testedKeypair = (success, data) => {
     if (!success || !data || !data.publicKey) {
       Logger.writeLog('APP_032', 'failed to encrypt with selected keypair', { success, data })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_032',
@@ -510,34 +510,34 @@ const apiInit = () => {
       return
     }
 
-    NavtechApi.runtime.publicKey = data.publicKey
+    SoftnodeApi.runtime.publicKey = data.publicKey
     RandomizeTransactions.getRandomAccountAddresses({
-      client: NavtechApi.navClient,
+      client: SoftnodeApi.softClient,
       accountName: privateSettings.account[globalSettings.serverType],
-      numAddresses: NavtechApi.runtime.numAddresses,
-    }, NavtechApi.hasRandomAddresses)
+      numAddresses: SoftnodeApi.runtime.numAddresses,
+    }, SoftnodeApi.hasRandomAddresses)
   }
 
-  NavtechApi.hasRandomAddresses = (success, data) => {
+  SoftnodeApi.hasRandomAddresses = (success, data) => {
     if (!success || !data || !data.pickedAddresses) {
-      Logger.writeLog('APP_033', 'failed to retrieve nav addresses', { success, data })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      Logger.writeLog('APP_033', 'failed to retrieve soft addresses', { success, data })
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_033',
-        message: 'failed to retrieve nav addresses',
+        message: 'failed to retrieve soft addresses',
       }))
       return
     }
 
-    NavtechApi.runtime.navAddresses = data.pickedAddresses
-    NavtechApi.getHash()
+    SoftnodeApi.runtime.softAddresses = data.pickedAddresses
+    SoftnodeApi.getHash()
   }
 
-  NavtechApi.hasRandomSubAddresses = (success, data) => {
+  SoftnodeApi.hasRandomSubAddresses = (success, data) => {
     if (!success || !data || !data.pickedAddresses) {
       Logger.writeLog('APP_034', 'failed to retrieve subchain addresses', { success, data })
-      NavtechApi.runtime.res.send(JSON.stringify({
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'FAIL',
         code: 'APP_034',
@@ -545,15 +545,15 @@ const apiInit = () => {
       }))
       return
     }
-    NavtechApi.runtime.subAddresses = data.pickedAddresses
-    NavtechApi.getHash()
+    SoftnodeApi.runtime.subAddresses = data.pickedAddresses
+    SoftnodeApi.getHash()
   }
 
-  NavtechApi.getHash = () => {
-    md5File('dist/navtech.js', (err, hash) => {
+  SoftnodeApi.getHash = () => {
+    md5File('dist/softnode.js', (err, hash) => {
       if (err) {
         Logger.writeLog('APP_035A', 'error generating md5 hash', { err, hash })
-        NavtechApi.runtime.res.send(JSON.stringify({
+        SoftnodeApi.runtime.res.send(JSON.stringify({
           status: 200,
           type: 'FAILURE',
           message: 'error generating md5 hash',
@@ -562,17 +562,17 @@ const apiInit = () => {
         }))
         return
       }
-      NavtechApi.returnCheckedNode(hash)
+      SoftnodeApi.returnCheckedNode(hash)
     })
   }
 
-  NavtechApi.returnCheckedNode = (hash) => {
+  SoftnodeApi.returnCheckedNode = (hash) => {
     const localHost = settings.local.host ? settings.local.host : settings.local.ipAddress
 
     const returnData = {
-      nav_balance: NavtechApi.runtime.navBalance,
-      sub_balance: NavtechApi.runtime.subBalance,
-      public_key: NavtechApi.runtime.publicKey,
+      soft_balance: SoftnodeApi.runtime.softBalance,
+      sub_balance: SoftnodeApi.runtime.subBalance,
+      public_key: SoftnodeApi.runtime.publicKey,
       server_type: globalSettings.serverType,
       min_amount: settings.minAmount,
       max_amount: settings.maxAmount,
@@ -582,14 +582,14 @@ const apiInit = () => {
       md5: hash,
     }
 
-    returnData.nav_addresses = NavtechApi.runtime.navAddresses
+    returnData.soft_addresses = SoftnodeApi.runtime.softAddresses
 
     // Logger.writeLog('APP_TEST_002', 'success check-node', {
     //   returnData,
-    //   request: NavtechApi.runtime.req.body,
+    //   request: SoftnodeApi.runtime.req.body,
     // })
 
-    NavtechApi.runtime.res.send(JSON.stringify({
+    SoftnodeApi.runtime.res.send(JSON.stringify({
       status: 200,
       type: 'SUCCESS',
       data: returnData,
@@ -601,16 +601,16 @@ const apiInit = () => {
   // -------------- CHECK IF SERVER IS PROCESSING ------------------------------------------------------------------------------------------
 
   app.get('/api/status', (req, res) => {
-    NavtechApi.runtime = {}
-    NavtechApi.runtime.req = req
-    NavtechApi.runtime.res = res
+    SoftnodeApi.runtime = {}
+    SoftnodeApi.runtime.req = req
+    SoftnodeApi.runtime.res = res
 
     if (globalSettings.serverType === 'INCOMING') {
       const now = new Date()
       const diff = now - IncomingServer.runtime.cycleStart
       const timeRemaining = settings.scriptInterval - diff
 
-      NavtechApi.runtime.res.send(JSON.stringify({
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'SUCCESS',
         data: {
@@ -624,7 +624,7 @@ const apiInit = () => {
       const diff = now - OutgoingServer.runtime.cycleStart
       const timeRemaining = settings.scriptInterval - diff
 
-      NavtechApi.runtime.res.send(JSON.stringify({
+      SoftnodeApi.runtime.res.send(JSON.stringify({
         status: 200,
         type: 'SUCCESS',
         data: {

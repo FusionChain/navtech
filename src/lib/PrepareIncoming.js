@@ -5,14 +5,14 @@ const globalSettings = config.get('GLOBAL')
 let privateSettings = require('../settings/private.settings.json') // eslint-disable-line
 
 let Logger = require('./Logger.js') // eslint-disable-line
-let NavCoin = require('./NavCoin.js') // eslint-disable-line
+let SoftCoin = require('./SoftCoin.js') // eslint-disable-line
 let FlattenTransactions = require('./FlattenTransactions.js') // eslint-disable-line
 let GroupPartials = require('./GroupPartials.js') // eslint-disable-line
 
 const PrepareIncoming = {}
 
 PrepareIncoming.run = (options, callback) => {
-  const required = ['navClient', 'outgoingNavBalance', 'subBalance', 'settings']
+  const required = ['softClient', 'outgoingSoftBalance', 'subBalance', 'settings']
   if (lodash.intersection(Object.keys(options), required).length !== required.length) {
     Logger.writeLog('PREPI_001', 'invalid options', { options, required })
     callback(false, { message: 'invalid options provided to ReturnAllToSenders.run' })
@@ -20,8 +20,8 @@ PrepareIncoming.run = (options, callback) => {
   }
   PrepareIncoming.runtime = {
     callback,
-    navClient: options.navClient,
-    outgoingNavBalance: options.outgoingNavBalance,
+    softClient: options.softClient,
+    outgoingSoftBalance: options.outgoingSoftBalance,
     subBalance: options.subBalance,
     currentFlattened: {},
     currentBatch: [],
@@ -33,14 +33,14 @@ PrepareIncoming.run = (options, callback) => {
 }
 
 PrepareIncoming.getUnspent = () => {
-  PrepareIncoming.runtime.navClient.listUnspent().then((unspent) => {
+  PrepareIncoming.runtime.softClient.listUnspent().then((unspent) => {
     if (unspent.length < 1) {
       PrepareIncoming.runtime.callback(false, { message: 'no unspent transactions found' })
       return
     }
-    NavCoin.filterUnspent({
+    SoftCoin.filterUnspent({
       unspent,
-      client: PrepareIncoming.runtime.navClient,
+      client: PrepareIncoming.runtime.softClient,
       accountName: privateSettings.account[globalSettings.serverType],
     },
     PrepareIncoming.unspentFiltered)
@@ -60,7 +60,7 @@ PrepareIncoming.unspentFiltered = (success, data) => {
   PrepareIncoming.runtime.currentPending = data.currentPending
   GroupPartials.run({
     currentPending: data.currentPending,
-    client: PrepareIncoming.runtime.navClient,
+    client: PrepareIncoming.runtime.softClient,
   }, PrepareIncoming.partialsGrouped)
 }
 
@@ -84,9 +84,9 @@ PrepareIncoming.partialsGrouped = (success, data) => {
 
   PrepareIncoming.pruneUnspent({
     readyToProcess: data.readyToProcess,
-    client: PrepareIncoming.runtime.navClient,
+    client: PrepareIncoming.runtime.softClient,
     subBalance: PrepareIncoming.runtime.subBalance,
-    maxAmount: PrepareIncoming.runtime.outgoingNavBalance,
+    maxAmount: PrepareIncoming.runtime.outgoingSoftBalance,
   }, PrepareIncoming.unspentPruned)
 }
 

@@ -282,7 +282,7 @@ describe('[RetrieveSubchainAddresses]', () => {
       RetrieveSubchainAddresses.runtime = {
         numAddresses: 3,
       }
-      const NavCoin = {
+      const SoftCoin = {
         validateAddresses: (options, callback) => {
           expect(callback).toBe(RetrieveSubchainAddresses.subAddressesValid)
           sinon.assert.notCalled(mockLogger.writeLog)
@@ -293,7 +293,7 @@ describe('[RetrieveSubchainAddresses]', () => {
         writeLog: sinon.spy(),
       }
       RetrieveSubchainAddresses.__set__('Logger', mockLogger)
-      RetrieveSubchainAddresses.__set__('NavCoin', NavCoin)
+      RetrieveSubchainAddresses.__set__('SoftCoin', SoftCoin)
       RetrieveSubchainAddresses.checkSubAddresses([1, 2, 3])
     })
   })

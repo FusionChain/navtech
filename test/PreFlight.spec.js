@@ -30,16 +30,16 @@ describe('[PreFlight]', () => {
     it('should receive correct params and call checkBlockHeight', (done) => {
       const callback = () => {}
 
-      const mockNavClient = { test: 1 }
+      const mockSoftClient = { test: 1 }
       const mockSubClient = { test: 2 }
 
-      const mockNavCoin = {
+      const mockSoftCoin = {
         checkBlockHeight: (options, parsedCallback) => {
-          expect(parsedCallback).toBe(PreFlight.navBlocksChecked)
+          expect(parsedCallback).toBe(PreFlight.softBlocksChecked)
           expect(options).toBeA('object')
           expect(PreFlight.runtime).toEqual({
             callback,
-            navClient: mockNavClient,
+            softClient: mockSoftClient,
             subClient: mockSubClient,
             settings: incomingSettings,
           })
@@ -47,16 +47,16 @@ describe('[PreFlight]', () => {
         },
       }
 
-      PreFlight.__set__('NavCoin', mockNavCoin)
+      PreFlight.__set__('SoftCoin', mockSoftCoin)
 
       PreFlight.run({
-        navClient: mockNavClient,
+        softClient: mockSoftClient,
         subClient: mockSubClient,
         settings: incomingSettings,
       }, callback)
     })
   })
-  describe('(navBlocksChecked)', () => {
+  describe('(softBlocksChecked)', () => {
     it('should fail due to success being false', (done) => {
       const mockLogger = {
         writeLog: sinon.spy(),
@@ -71,7 +71,7 @@ describe('[PreFlight]', () => {
         },
       }
       PreFlight.__set__('Logger', mockLogger)
-      PreFlight.navBlocksChecked(false, {})
+      PreFlight.softBlocksChecked(false, {})
     })
     it('should fail due to data being undefined', (done) => {
       const mockLogger = {
@@ -87,7 +87,7 @@ describe('[PreFlight]', () => {
         },
       }
       PreFlight.__set__('Logger', mockLogger)
-      PreFlight.navBlocksChecked(true)
+      PreFlight.softBlocksChecked(true)
     })
     it('should fail to set the tx fee', (done) => {
       const mockLogger = {
@@ -101,12 +101,12 @@ describe('[PreFlight]', () => {
           sinon.assert.calledOnce(mockLogger.writeLog)
           done()
         },
-        navClient: {
+        softClient: {
           setTxFee: () => { return Promise.reject({ code: -17 }) },
         },
       }
       PreFlight.__set__('Logger', mockLogger)
-      PreFlight.navBlocksChecked(true, {
+      PreFlight.softBlocksChecked(true, {
         balance: 100,
       })
     })
@@ -115,17 +115,17 @@ describe('[PreFlight]', () => {
         writeLog: sinon.spy(),
       }
 
-      const mockNavCoin = {
+      const mockSoftCoin = {
         checkBlockHeight: (options, parsedCallback) => {
           expect(parsedCallback).toBe(PreFlight.subBlocksChecked)
           expect(options).toBeA('object')
-          expect(PreFlight.runtime.navBalance).toBe(100)
+          expect(PreFlight.runtime.softBalance).toBe(100)
           done()
         },
       }
 
       PreFlight.runtime = {
-        navClient: {
+        softClient: {
           setTxFee: () => { return Promise.resolve() },
         },
         subClient: {
@@ -133,9 +133,9 @@ describe('[PreFlight]', () => {
         },
       }
 
-      PreFlight.__set__('NavCoin', mockNavCoin)
+      PreFlight.__set__('SoftCoin', mockSoftCoin)
       PreFlight.__set__('Logger', mockLogger)
-      PreFlight.navBlocksChecked(true, {
+      PreFlight.softBlocksChecked(true, {
         balance: 100,
       })
     })
@@ -173,19 +173,19 @@ describe('[PreFlight]', () => {
       PreFlight.__set__('Logger', mockLogger)
       PreFlight.subBlocksChecked(true)
     })
-    it('should save the subBalance to memory and unlock the navClient', (done) => {
-      const mockNavCoin = {
+    it('should save the subBalance to memory and unlock the softClient', (done) => {
+      const mockSoftCoin = {
         unlockWallet: (options, parsedCallback) => {
-          expect(parsedCallback).toBe(PreFlight.navClientUnlocked)
+          expect(parsedCallback).toBe(PreFlight.softClientUnlocked)
           expect(options).toBeA('object')
-          expect(options.type).toBe('navCoin')
+          expect(options.type).toBe('softCoin')
           expect(PreFlight.runtime.subBalance).toBe(200)
           done()
         },
       }
 
       PreFlight.runtime = {
-        navClient: {
+        softClient: {
           setTxFee: () => { return Promise.resolve() },
         },
         subClient: {
@@ -193,13 +193,13 @@ describe('[PreFlight]', () => {
         },
       }
 
-      PreFlight.__set__('NavCoin', mockNavCoin)
+      PreFlight.__set__('SoftCoin', mockSoftCoin)
       PreFlight.subBlocksChecked(true, {
         balance: 200,
       })
     })
   })
-  describe('(navClientUnlocked)', () => {
+  describe('(softClientUnlocked)', () => {
     it('should fail due to success being false', (done) => {
       const mockLogger = {
         writeLog: sinon.spy(),
@@ -214,10 +214,10 @@ describe('[PreFlight]', () => {
         },
       }
       PreFlight.__set__('Logger', mockLogger)
-      PreFlight.navClientUnlocked(false, {})
+      PreFlight.softClientUnlocked(false, {})
     })
     it('should unlock the subClient', (done) => {
-      const mockNavCoin = {
+      const mockSoftCoin = {
         unlockWallet: (options, parsedCallback) => {
           expect(parsedCallback).toBe(PreFlight.subClientUnlocked)
           expect(options).toBeA('object')
@@ -227,7 +227,7 @@ describe('[PreFlight]', () => {
       }
 
       PreFlight.runtime = {
-        navClient: {
+        softClient: {
           setTxFee: () => { return Promise.resolve() },
         },
         subClient: {
@@ -235,8 +235,8 @@ describe('[PreFlight]', () => {
         },
       }
 
-      PreFlight.__set__('NavCoin', mockNavCoin)
-      PreFlight.navClientUnlocked(true)
+      PreFlight.__set__('SoftCoin', mockSoftCoin)
+      PreFlight.softClientUnlocked(true)
     })
   })
   describe('(subClientUnlocked)', () => {
@@ -280,14 +280,14 @@ describe('[PreFlight]', () => {
         callback: (success, data) => {
           expect(success).toBe(true)
           expect(data).toBeA('object')
-          expect(data.navBalance).toBe(100)
+          expect(data.softBalance).toBe(100)
           expect(data.subBalance).toBe(200)
           done()
         },
         subClient: {
           setTxFee: () => { return Promise.resolve() },
         },
-        navBalance: 100,
+        softBalance: 100,
         subBalance: 200,
       }
       PreFlight.subClientUnlocked(true, {})

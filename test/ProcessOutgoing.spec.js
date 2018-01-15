@@ -25,7 +25,7 @@ describe('[ProcessOutgoing]', () => {
     it('should set the runtime variables and call getUnspent', (done) => {
       ProcessOutgoing.processPending = () => {
         expect(ProcessOutgoing.runtime.callback).toBe(callback)
-        expect(ProcessOutgoing.runtime.navClient).toBe(mockClient)
+        expect(ProcessOutgoing.runtime.softClient).toBe(mockClient)
         expect(ProcessOutgoing.runtime.settings).toEqual({ test: 1 })
         expect(ProcessOutgoing.runtime.successfulTransactions).toEqual([])
         expect(ProcessOutgoing.runtime.failedTransactions).toEqual([])
@@ -45,7 +45,7 @@ describe('[ProcessOutgoing]', () => {
       }
 
       ProcessOutgoing.run({
-        navClient: mockClient,
+        softClient: mockClient,
         currentBatch: [1, 2, 3],
         settings: { test: 1 },
       }, callback)
@@ -82,12 +82,12 @@ describe('[ProcessOutgoing]', () => {
         ],
         successfulTransactions: [1, 2, 3],
         failedTransactions: [4, 5, 6],
-        navClient: { getInfo: true },
+        softClient: { getInfo: true },
       }
       const SendToAddress = {
         send: (options, callback) => {
-          expect(callback).toBe(ProcessOutgoing.sentNav)
-          expect(options.client).toBe(ProcessOutgoing.runtime.navClient)
+          expect(callback).toBe(ProcessOutgoing.sentSoft)
+          expect(options.client).toBe(ProcessOutgoing.runtime.softClient)
           expect(options.address).toBe('ASDF')
           expect(options.amount).toBe(333)
           expect(options.transaction).toEqual({ txid: 1234, decrypted: { n: 'ASDF', v: 333 } })
@@ -174,11 +174,11 @@ describe('[ProcessOutgoing]', () => {
       ProcessOutgoing.mockSend()
     })
   })
-  describe('(sentNav)', () => {
+  describe('(sentSoft)', () => {
     beforeEach(() => { // reset the rewired functions
       ProcessOutgoing = rewire('../src/lib/ProcessOutgoing')
     })
-    it('should fail to send partial nav (returned false) and try the next one', (done) => {
+    it('should fail to send partial soft (returned false) and try the next one', (done) => {
       const mockLogger = {
         writeLog: sinon.spy(),
       }
@@ -216,9 +216,9 @@ describe('[ProcessOutgoing]', () => {
       }
 
       ProcessOutgoing.__set__('Logger', mockLogger)
-      ProcessOutgoing.sentNav(false, { junkParam: 1234 })
+      ProcessOutgoing.sentSoft(false, { junkParam: 1234 })
     })
-    it('should fail to send partial nav (bad data) and try the next one', (done) => {
+    it('should fail to send partial soft (bad data) and try the next one', (done) => {
       const mockLogger = {
         writeLog: sinon.spy(),
       }
@@ -256,9 +256,9 @@ describe('[ProcessOutgoing]', () => {
       }
 
       ProcessOutgoing.__set__('Logger', mockLogger)
-      ProcessOutgoing.sentNav(true, { junkParam: 1234 })
+      ProcessOutgoing.sentSoft(true, { junkParam: 1234 })
     })
-    it('should fail to send partial (no data) nav and try the next one', (done) => {
+    it('should fail to send partial (no data) soft and try the next one', (done) => {
       const mockLogger = {
         writeLog: sinon.spy(),
       }
@@ -296,9 +296,9 @@ describe('[ProcessOutgoing]', () => {
       }
 
       ProcessOutgoing.__set__('Logger', mockLogger)
-      ProcessOutgoing.sentNav(true)
+      ProcessOutgoing.sentSoft(true)
     })
-    it('should successfully send the partial nav and try the next partial', (done) => {
+    it('should successfully send the partial soft and try the next partial', (done) => {
       const mockLogger = {
         writeLog: sinon.spy(),
       }
@@ -335,7 +335,7 @@ describe('[ProcessOutgoing]', () => {
       }
 
       ProcessOutgoing.__set__('Logger', mockLogger)
-      ProcessOutgoing.sentNav(true, { sendOutcome: '1234' })
+      ProcessOutgoing.sentSoft(true, { sendOutcome: '1234' })
     })
   })
 })

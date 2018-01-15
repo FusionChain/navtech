@@ -4,10 +4,10 @@ const expect = require('expect')
 const rewire = require('rewire')
 const config = require('config')
 
-let NavCoin = rewire('../src/lib/NavCoin')
+let SoftCoin = rewire('../src/lib/SoftCoin')
 const incomingSettings = config.get('INCOMING')
 
-describe('[NavCoin]', () => {
+describe('[SoftCoin]', () => {
   describe('(unlockWallet)', () => {
     it('should fail on params', (done) => {
       const callback = (success, data) => {
@@ -15,19 +15,19 @@ describe('[NavCoin]', () => {
         expect(data.message).toBeA('string')
         done()
       }
-      NavCoin.unlockWallet({}, callback)
+      SoftCoin.unlockWallet({}, callback)
     })
     it('should immediately callback if not using a locked wallet', (done) => {
-      NavCoin.__set__({ globalSettings: { encryptedWallet: false } })
+      SoftCoin.__set__({ globalSettings: { encryptedWallet: false } })
       const mockClient = {}
       const callback = (success) => {
         expect(success).toBe(true)
         done()
       }
-      NavCoin.unlockWallet({ client: mockClient, settings: incomingSettings, type: 'navCoin' }, callback)
+      SoftCoin.unlockWallet({ client: mockClient, settings: incomingSettings, type: 'softCoin' }, callback)
     })
     it('should fail to unlock the wallet', (done) => {
-      NavCoin.__set__({ globalSettings: { encryptedWallet: true } })
+      SoftCoin.__set__({ globalSettings: { encryptedWallet: true } })
       const mockClient = {
         walletPassphrase: () => { return Promise.reject({ code: -5 }) },
         walletLock: () => { return Promise.resolve() },
@@ -37,7 +37,7 @@ describe('[NavCoin]', () => {
         expect(error.message).toBeA('string')
         done()
       }
-      NavCoin.unlockWallet({ client: mockClient, settings: incomingSettings, type: 'navCoin' }, callback)
+      SoftCoin.unlockWallet({ client: mockClient, settings: incomingSettings, type: 'softCoin' }, callback)
     })
     it('should unlock the wallet', (done) => {
       const mockClient = {
@@ -48,12 +48,12 @@ describe('[NavCoin]', () => {
         expect(success).toEqual(true)
         done()
       }
-      NavCoin.unlockWallet({ client: mockClient, settings: incomingSettings, type: 'navCoin' }, callback)
+      SoftCoin.unlockWallet({ client: mockClient, settings: incomingSettings, type: 'softCoin' }, callback)
     })
   })
   describe('(lockWallet)', () => {
     beforeEach(() => { // reset the rewired functions
-      NavCoin = rewire('../src/lib/NavCoin')
+      SoftCoin = rewire('../src/lib/SoftCoin')
     })
     it('should fail on params', (done) => {
       const callback = (success, data) => {
@@ -61,7 +61,7 @@ describe('[NavCoin]', () => {
         expect(data.message).toBeA('string')
         done()
       }
-      NavCoin.lockWallet({}, callback)
+      SoftCoin.lockWallet({}, callback)
     })
     it('should fail to lock the wallet', (done) => {
       const mockClient = {
@@ -72,19 +72,19 @@ describe('[NavCoin]', () => {
         expect(data.message).toBeA('string')
         done()
       }
-      NavCoin.lockWallet({ client: mockClient, type: 'navCoin' }, callback)
+      SoftCoin.lockWallet({ client: mockClient, type: 'softCoin' }, callback)
     })
     it('should lock the wallet', (done) => {
       const mockClient = {
         walletLock: () => { return Promise.resolve({ message: 'WALLET_UNLOCKED' }) },
       }
-      NavCoin.unlockWallet = (options, callback) => {
-        expect(options.type).toBe('navCoin')
+      SoftCoin.unlockWallet = (options, callback) => {
+        expect(options.type).toBe('softCoin')
         expect(options.client).toBe(mockClient)
         expect(callback).toBeA('function')
         done()
       }
-      NavCoin.lockWallet({ client: mockClient, type: 'navCoin' }, () => {})
+      SoftCoin.lockWallet({ client: mockClient, type: 'softCoin' }, () => {})
     })
   })
   describe('(filterUnspent)', () => {
@@ -94,7 +94,7 @@ describe('[NavCoin]', () => {
         expect(data.message).toBeA('string')
         done()
       }
-      NavCoin.filterUnspent({}, callback)
+      SoftCoin.filterUnspent({}, callback)
     })
     it('should to get the addresses by account', (done) => {
       const unspent = []
@@ -106,7 +106,7 @@ describe('[NavCoin]', () => {
         expect(success).toBe(false)
         done()
       }
-      NavCoin.filterUnspent({ client: mockClient, unspent, accountName }, callback)
+      SoftCoin.filterUnspent({ client: mockClient, unspent, accountName }, callback)
     })
     it('should not find any intersecting addresses', (done) => {
       const unspent = [
@@ -122,7 +122,7 @@ describe('[NavCoin]', () => {
         expect(success).toBe(false)
         done()
       }
-      NavCoin.filterUnspent({ client: mockClient, unspent, accountName }, callback)
+      SoftCoin.filterUnspent({ client: mockClient, unspent, accountName }, callback)
     })
     it('should find 1 intersecting address', (done) => {
       const unspent = [
@@ -139,7 +139,7 @@ describe('[NavCoin]', () => {
         expect(data.currentPending.length).toBe(1)
         done()
       }
-      NavCoin.filterUnspent({ client: mockClient, unspent, accountName }, callback)
+      SoftCoin.filterUnspent({ client: mockClient, unspent, accountName }, callback)
     })
     it('should find 3 intersecting address', (done) => {
       const unspent = [
@@ -156,7 +156,7 @@ describe('[NavCoin]', () => {
         expect(data.currentPending.length).toBe(3)
         done()
       }
-      NavCoin.filterUnspent({ client: mockClient, unspent, accountName }, callback)
+      SoftCoin.filterUnspent({ client: mockClient, unspent, accountName }, callback)
     })
   })
   describe('(checkBlockHeight)', () => {
@@ -166,7 +166,7 @@ describe('[NavCoin]', () => {
         expect(data.message).toBeA('string')
         done()
       }
-      NavCoin.checkBlockHeight({}, callback)
+      SoftCoin.checkBlockHeight({}, callback)
     })
     it('should fail getInfo', (done) => {
       const mockClient = {
@@ -177,7 +177,7 @@ describe('[NavCoin]', () => {
         expect(data.message).toBeA('string')
         done()
       }
-      NavCoin.checkBlockHeight({ client: mockClient, blockThreshold: 1 }, callback)
+      SoftCoin.checkBlockHeight({ client: mockClient, blockThreshold: 1 }, callback)
     })
     it('should pass getInfo and fail getBlockCount', (done) => {
       const mockClient = {
@@ -189,7 +189,7 @@ describe('[NavCoin]', () => {
         expect(data.message).toBeA('string')
         done()
       }
-      NavCoin.checkBlockHeight({ client: mockClient, blockThreshold: 1 }, callback)
+      SoftCoin.checkBlockHeight({ client: mockClient, blockThreshold: 1 }, callback)
     })
     it('should fail due to being too far behind', (done) => {
       const mockClient = {
@@ -201,7 +201,7 @@ describe('[NavCoin]', () => {
         expect(data.message).toBeA('string')
         done()
       }
-      NavCoin.checkBlockHeight({ client: mockClient, blockThreshold: 1 }, callback)
+      SoftCoin.checkBlockHeight({ client: mockClient, blockThreshold: 1 }, callback)
     })
     it('should pass the block check', (done) => {
       const mockClient = {
@@ -213,7 +213,7 @@ describe('[NavCoin]', () => {
         expect(data.balance).toBe(10000)
         done()
       }
-      NavCoin.checkBlockHeight({ client: mockClient, blockThreshold: 1 }, callback)
+      SoftCoin.checkBlockHeight({ client: mockClient, blockThreshold: 1 }, callback)
     })
   })
   describe('(validateAddresses)', () => {
@@ -223,7 +223,7 @@ describe('[NavCoin]', () => {
         expect(data.message).toBeA('string')
         done()
       }
-      NavCoin.validateAddresses({}, callback)
+      SoftCoin.validateAddresses({}, callback)
     })
     it('should fail the validateAddress call', (done) => {
       const mockClient = {
@@ -235,7 +235,7 @@ describe('[NavCoin]', () => {
         expect(data.message).toBeA('string')
         done()
       }
-      NavCoin.validateAddresses({ client: mockClient, addresses }, callback)
+      SoftCoin.validateAddresses({ client: mockClient, addresses }, callback)
     })
     it('should not validate the addresses', (done) => {
       const mockClient = {
@@ -247,7 +247,7 @@ describe('[NavCoin]', () => {
         expect(data.message).toBeA('string')
         done()
       }
-      NavCoin.validateAddresses({ client: mockClient, addresses }, callback)
+      SoftCoin.validateAddresses({ client: mockClient, addresses }, callback)
     })
     it('should validate the addresses', (done) => {
       const mockClient = {
@@ -258,7 +258,7 @@ describe('[NavCoin]', () => {
         expect(success).toBe(true)
         done()
       }
-      NavCoin.validateAddresses({ client: mockClient, addresses }, callback)
+      SoftCoin.validateAddresses({ client: mockClient, addresses }, callback)
     })
   })
 })
@@ -272,7 +272,7 @@ describe('[NavCoin]', () => {
   //       expect(success).toBe(false)
   //       done()
   //     }
-  //     NavCoin.pruneIncomingUnspent({}, callback)
+  //     SoftCoin.pruneIncomingUnspent({}, callback)
   //   })
   //   it('should not prune any pending', (done) => {
   //     const currentPending = [
@@ -286,7 +286,7 @@ describe('[NavCoin]', () => {
   //       expect(data.sumPending).toBe(60)
   //       done()
   //     }
-  //     NavCoin.pruneIncomingUnspent({ currentPending, subBalance: 1000, maxAmount: 100 }, callback)
+  //     SoftCoin.pruneIncomingUnspent({ currentPending, subBalance: 1000, maxAmount: 100 }, callback)
   //   })
   //   it('should prune all pending', (done) => {
   //     const currentPending = [
@@ -299,7 +299,7 @@ describe('[NavCoin]', () => {
   //       expect(data.error).toBe('no pruned')
   //       done()
   //     }
-  //     NavCoin.pruneIncomingUnspent({ currentPending, subBalance: 1000, maxAmount: 50 }, callback)
+  //     SoftCoin.pruneIncomingUnspent({ currentPending, subBalance: 1000, maxAmount: 50 }, callback)
   //   })
   //   it('should prune to the maxAmount', (done) => {
   //     const currentPending = [
@@ -313,7 +313,7 @@ describe('[NavCoin]', () => {
   //       expect(data.sumPending).toBe(50)
   //       done()
   //     }
-  //     NavCoin.pruneIncomingUnspent({ currentPending, subBalance: 1000, maxAmount: 100 }, callback)
+  //     SoftCoin.pruneIncomingUnspent({ currentPending, subBalance: 1000, maxAmount: 100 }, callback)
   //   })
   //   it('should prune to the right number subcoins', (done) => {
   //     const currentPending = [
@@ -327,7 +327,7 @@ describe('[NavCoin]', () => {
   //       expect(data.sumPending).toBe(20)
   //       done()
   //     }
-  //     NavCoin.pruneIncomingUnspent({ currentPending, subBalance: 10.01, maxAmount: 100 }, callback)
+  //     SoftCoin.pruneIncomingUnspent({ currentPending, subBalance: 10.01, maxAmount: 100 }, callback)
   //   })
   //   it('should prune to the maximum amount of subaddresses we can receive from the outgoing', (done) => {
   //     const currentPending = []
@@ -340,6 +340,6 @@ describe('[NavCoin]', () => {
   //       expect(data.sumPending).toBe(5000)
   //       done()
   //     }
-  //     NavCoin.pruneIncomingUnspent({ currentPending, subBalance: 100000, maxAmount: 100000 }, callback)
+  //     SoftCoin.pruneIncomingUnspent({ currentPending, subBalance: 100000, maxAmount: 100000 }, callback)
   //   })
   // })

@@ -207,7 +207,7 @@ describe('[SendRawTransaction]', () => {
       SendRawTransaction.__set__('Logger', mockLogger)
       SendRawTransaction.signRaw('RAW_TRANSACTION')
     })
-    it('should fail to sign the raw transaction and attempt to unlock the wallet (navCoin)', (done) => {
+    it('should fail to sign the raw transaction and attempt to unlock the wallet (softCoin)', (done) => {
       const callback = () => {}
       const client = {
         signRawTransaction: () => { return Promise.reject({ code: -13 }) },
@@ -219,11 +219,11 @@ describe('[SendRawTransaction]', () => {
         client,
       }
 
-      const NavCoin = {
+      const SoftCoin = {
         unlockWallet: (options, parsedCallback) => {
           expect(parsedCallback).toBe(SendRawTransaction.walletUnlocked)
           expect(options.client).toBe(client)
-          expect(options.type).toBe('navCoin')
+          expect(options.type).toBe('softCoin')
           sinon.assert.notCalled(mockLogger.writeLog)
           done()
         },
@@ -233,7 +233,7 @@ describe('[SendRawTransaction]', () => {
         writeLog: sinon.spy(),
       }
 
-      SendRawTransaction.__set__('NavCoin', NavCoin)
+      SendRawTransaction.__set__('SoftCoin', SoftCoin)
       SendRawTransaction.__set__('Logger', mockLogger)
       SendRawTransaction.signRaw('RAW_TRANSACTION')
     })
@@ -249,7 +249,7 @@ describe('[SendRawTransaction]', () => {
         client,
       }
 
-      const NavCoin = {
+      const SoftCoin = {
         unlockWallet: (options, parsedCallback) => {
           expect(parsedCallback).toBe(SendRawTransaction.walletUnlocked)
           expect(options.client).toBe(client)
@@ -263,7 +263,7 @@ describe('[SendRawTransaction]', () => {
         writeLog: sinon.spy(),
       }
 
-      SendRawTransaction.__set__('NavCoin', NavCoin)
+      SendRawTransaction.__set__('SoftCoin', SoftCoin)
       SendRawTransaction.__set__('Logger', mockLogger)
       SendRawTransaction.signRaw('RAW_TRANSACTION')
     })

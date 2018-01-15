@@ -30,10 +30,10 @@ describe('[PayoutFee]', () => {
       expect(true).toBe(true)
       done()
     }
-    PayoutFee.run({ settings: 'bloop', navClient: 'wow' }, callback)
+    PayoutFee.run({ settings: 'bloop', softClient: 'wow' }, callback)
   })
   describe('(send)', () => {
-    it('should fail when navBalance is less than poolAmount', (done) => {
+    it('should fail when softBalance is less than poolAmount', (done) => {
       const callback = (success, data) => {
         expect(success).toBe(false)
         sinon.assert.calledWith(mockLogger.writeLog, 'PAY_002')
@@ -44,12 +44,12 @@ describe('[PayoutFee]', () => {
         listUnspent: () => { return Promise.resolve([{ amount: 100 }, { amount: 200 }, { amount: 500 }]) },
       }
       const mockSettings = {
-        navPoolAmount: 1000,
+        softPoolAmount: 1000,
       }
       PayoutFee.runtime = {
         callback,
         settings: mockSettings,
-        navClient: mockClient,
+        softClient: mockClient,
       }
       const mockLogger = {
         writeLog: sinon.spy(),
@@ -57,7 +57,7 @@ describe('[PayoutFee]', () => {
       PayoutFee.__set__('Logger', mockLogger)
       PayoutFee.send()
     })
-    it('should fail when navPayout is less than the minimum specified amount', (done) => {
+    it('should fail when softPayout is less than the minimum specified amount', (done) => {
       const callback = (success, data) => {
         expect(success).toBe(false)
         sinon.assert.notCalled(mockLogger.writeLog)
@@ -68,7 +68,7 @@ describe('[PayoutFee]', () => {
         listUnspent: () => { return Promise.resolve([{ amount: 100 }, { amount: 200 }, { amount: 500 }]) },
       }
       const mockSettings = {
-        navPoolAmount: 500,
+        softPoolAmount: 500,
         txFeePayoutMin: 500,
       }
       PayoutFee.privateSettings = {
@@ -77,7 +77,7 @@ describe('[PayoutFee]', () => {
       PayoutFee.runtime = {
         callback,
         settings: mockSettings,
-        navClient: mockClient,
+        softClient: mockClient,
       }
       const mockLogger = {
         writeLog: sinon.spy(),
@@ -98,7 +98,7 @@ describe('[PayoutFee]', () => {
         listUnspent: () => { return Promise.reject({ err: { code: -21 } }) },
       }
       const mockSettings = {
-        navPoolAmount: 100,
+        softPoolAmount: 100,
         txFeePayoutMin: 1,
         anonTxFeeAddress: 'abc123',
       }
@@ -109,7 +109,7 @@ describe('[PayoutFee]', () => {
       PayoutFee.runtime = {
         callback,
         settings: mockSettings,
-        navClient: mockClient,
+        softClient: mockClient,
       }
       PayoutFee.send()
     })
@@ -131,14 +131,14 @@ describe('[PayoutFee]', () => {
         listUnspent: () => { return Promise.resolve([{ amount: 100 }, { amount: 200 }, { amount: 500 }]) },
       }
       const mockSettings = {
-        navPoolAmount: 500,
+        softPoolAmount: 500,
         txFeePayoutMin: 100,
         anonTxFeeAddress: 'abc123',
       }
       PayoutFee.runtime = {
         callback,
         settings: mockSettings,
-        navClient: mockClient,
+        softClient: mockClient,
       }
       PayoutFee.__set__('SendToAddress', SendToAddress)
       PayoutFee.send()
@@ -168,14 +168,14 @@ describe('[PayoutFee]', () => {
         getBalance: () => { return Promise.resolve(120) },
       }
       const mockSettings = {
-        navPoolAmount: 10,
+        softPoolAmount: 10,
         txFeePayoutMin: 1,
         anonTxFeeAddress: 'abc123',
       }
       PayoutFee.runtime = {
         callback,
         settings: mockSettings,
-        navClient: mockClient,
+        softClient: mockClient,
       }
       PayoutFee.sent(false)
     })
@@ -190,14 +190,14 @@ describe('[PayoutFee]', () => {
         getBalance: () => { return Promise.resolve(120) },
       }
       const mockSettings = {
-        navPoolAmount: 10,
+        softPoolAmount: 10,
         txFeePayoutMin: 1,
         anonTxFeeAddress: 'abc123',
       }
       PayoutFee.runtime = {
         callback,
         settings: mockSettings,
-        navClient: mockClient,
+        softClient: mockClient,
       }
       PayoutFee.sent(true, { test: 'data' })
     })

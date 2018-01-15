@@ -3,14 +3,14 @@ const config = require('config')
 const globalSettings = config.get('GLOBAL')
 
 let Logger = require('./Logger.js') //eslint-disable-line
-let NavCoin = require('./NavCoin.js') //eslint-disable-line
+let SoftCoin = require('./SoftCoin.js') //eslint-disable-line
 const privateSettings = require('../settings/private.settings.json')
 let ReturnToSender = require('./ReturnToSender.js')//eslint-disable-line
 
 const ReturnAllToSenders = {}
 
 ReturnAllToSenders.run = (options, callback) => {
-  const required = ['navClient']
+  const required = ['softClient']
   if (lodash.intersection(Object.keys(options), required).length !== required.length) {
     Logger.writeLog('RATS_001', 'invalid options', { options, required })
     callback(false, { message: 'invalid options provided to ReturnAllToSenders.run' })
@@ -18,21 +18,21 @@ ReturnAllToSenders.run = (options, callback) => {
   }
   ReturnAllToSenders.runtime = {
     callback,
-    navClient: options.navClient,
+    softClient: options.softClient,
   }
 
   ReturnAllToSenders.getUnspent()
 }
 
 ReturnAllToSenders.fromList = (options, callback) => {
-  const required = ['navClient', 'transactionsToReturn']
+  const required = ['softClient', 'transactionsToReturn']
   if (lodash.intersection(Object.keys(options), required).length !== required.length) {
     Logger.writeLog('RATS_001A', 'invalid options', { options, required })
     callback(false, { message: 'invalid options provided to ReturnAllToSenders.fromList' })
   }
   ReturnAllToSenders.runtime = {
     callback,
-    navClient: options.navClient,
+    softClient: options.softClient,
     transactionsToReturn: options.transactionsToReturn,
   }
 
@@ -40,14 +40,14 @@ ReturnAllToSenders.fromList = (options, callback) => {
 }
 
 ReturnAllToSenders.getUnspent = () => {
-  ReturnAllToSenders.runtime.navClient.listUnspent().then((unspent) => {
+  ReturnAllToSenders.runtime.softClient.listUnspent().then((unspent) => {
     if (unspent.length < 1) {
       ReturnAllToSenders.runtime.callback(false, { message: 'no unspent transactions found' })
       return
     }
-    NavCoin.filterUnspent({
+    SoftCoin.filterUnspent({
       unspent,
-      client: ReturnAllToSenders.runtime.navClient,
+      client: ReturnAllToSenders.runtime.softClient,
       accountName: privateSettings.account[globalSettings.serverType],
     },
     ReturnAllToSenders.unspentFiltered)
@@ -75,7 +75,7 @@ ReturnAllToSenders.returnToSender = () => {
     return
   }
   ReturnToSender.send({
-    client: ReturnAllToSenders.runtime.navClient,
+    client: ReturnAllToSenders.runtime.softClient,
     transaction: ReturnAllToSenders.runtime.transactionsToReturn[0] },
   ReturnAllToSenders.returnedToSender)
 }

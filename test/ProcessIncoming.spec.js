@@ -41,7 +41,7 @@ describe('[ProcessIncoming]', () => {
         currentBatch: [],
         settings: { setting: true },
         subClient: { test: true },
-        navClient: {
+        softClient: {
           getBlockCount: () => {
             return Promise.reject({ err: { code: -21 } })
           },
@@ -60,7 +60,7 @@ describe('[ProcessIncoming]', () => {
         expect(ProcessIncoming.runtime.remainingTxGroups).toBe(mockOptions.currentBatch)
         expect(ProcessIncoming.runtime.settings).toBe(mockOptions.settings)
         expect(ProcessIncoming.runtime.subClient).toBe(mockOptions.subClient)
-        expect(ProcessIncoming.runtime.navClient).toBe(mockOptions.navClient)
+        expect(ProcessIncoming.runtime.softClient).toBe(mockOptions.softClient)
         expect(ProcessIncoming.runtime.outgoingPubKey).toBe(mockOptions.outgoingPubKey)
         expect(ProcessIncoming.runtime.subAddresses).toBe(mockOptions.subAddresses)
         expect(ProcessIncoming.runtime.currentFlattened).toBe(mockOptions.currentFlattened)
@@ -72,7 +72,7 @@ describe('[ProcessIncoming]', () => {
         currentBatch: [],
         settings: { setting: true },
         subClient: { test: true },
-        navClient: {
+        softClient: {
           getBlockCount: () => {
             return Promise.resolve(1000)
           },

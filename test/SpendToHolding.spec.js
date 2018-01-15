@@ -27,7 +27,7 @@ describe('[SpendToHolding]', () => {
     })
     it('should have correct params and call getRandomAccountAddresses', (done) => {
       const callback = () => {}
-      const navClient = {
+      const softClient = {
         getInfo: () => {},
       }
       const successfulSubTransactions = [1, 2, 3]
@@ -36,7 +36,7 @@ describe('[SpendToHolding]', () => {
         getRandomAccountAddresses: (options, parsedCallback) => {
           expect(parsedCallback).toBe(SpendToHolding.createHoldingTransactions)
           expect(options.accountName).toBe('HOLDING_ACCOUNT')
-          expect(options.client).toBe(navClient)
+          expect(options.client).toBe(softClient)
           expect(options.numAddresses).toBe(1)
           sinon.assert.notCalled(mockLogger.writeLog)
           done()
@@ -51,7 +51,7 @@ describe('[SpendToHolding]', () => {
       SpendToHolding.__set__('Logger', mockLogger)
       SpendToHolding.__set__('RandomizeTransactions', RandomizeTransactions)
       SpendToHolding.__set__('privateSettings', privateSettings)
-      SpendToHolding.run({ navClient, successfulSubTransactions, holdingEncrypted }, callback)
+      SpendToHolding.run({ softClient, successfulSubTransactions, holdingEncrypted }, callback)
     })
   })
   describe('(createHoldingTransactions)', () => {
@@ -75,7 +75,7 @@ describe('[SpendToHolding]', () => {
       SpendToHolding.createHoldingTransactions(false)
     })
     it('should build the holding transactions and create call createRaw', (done) => {
-      const navClient = {
+      const softClient = {
         getInfo: () => {},
       }
       const privateSettings = {
@@ -88,7 +88,7 @@ describe('[SpendToHolding]', () => {
           { txid: '6789', amount: 400, vout: 2 },
         ],
         holdingEncrypted: 'QWER==',
-        navClient,
+        softClient,
       }
       const SendRawTransaction = {
         createRaw: (options, parsedCallback) => {
@@ -101,7 +101,7 @@ describe('[SpendToHolding]', () => {
             { txid: '6789', vout: 2 },
           ])
           expect(options.encrypted).toBe('QWER==')
-          expect(options.client).toBe(navClient)
+          expect(options.client).toBe(softClient)
           expect(parsedCallback).toBe(SpendToHolding.sentToHolding)
           sinon.assert.notCalled(mockLogger.writeLog)
           done()
